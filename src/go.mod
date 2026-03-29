@@ -5,12 +5,10 @@ go 1.25.0
 require (
 	github.com/btcsuite/btcutil v1.0.2
 	github.com/dromara/carbon/v2 v2.6.15
-	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-resty/resty/v2 v2.11.0
 	github.com/gookit/color v1.5.0
 	github.com/gookit/goutil v0.4.6
 	github.com/gookit/validate v1.3.1
-	github.com/hibiken/asynq v0.25.1
 	github.com/json-iterator/go v1.1.12
 	github.com/labstack/echo/v4 v4.6.0
 	github.com/libtnb/sqlite v1.0.1
@@ -29,12 +27,11 @@ require (
 )
 
 require (
-	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gookit/filter v1.1.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -55,7 +52,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
-	github.com/redis/go-redis/v9 v9.17.3 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
@@ -72,7 +68,6 @@ require (
 	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.20.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/ini.v1 v1.63.2 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

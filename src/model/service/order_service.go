@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -12,42 +13,39 @@ import (
 	"github.com/assimon/luuu/model/mdb"
 	"github.com/assimon/luuu/model/request"
 	"github.com/assimon/luuu/model/response"
-	"github.com/assimon/luuu/mq"
-	"github.com/assimon/luuu/mq/handle"
 	"github.com/assimon/luuu/util/constant"
+	"github.com/assimon/luuu/util/log"
 	"github.com/assimon/luuu/util/math"
 	"github.com/dromara/carbon/v2"
-	"github.com/hibiken/asynq"
 	"github.com/shopspring/decimal"
 )
 
 const (
-	CnyMinimumPaymentAmount  = 0.01 // cny最低支付金额
-	UsdtMinimumPaymentAmount = 0.01 // usdt最低支付金额
-	UsdtAmountPerIncrement   = 0.01 // usdt每次递增金额
-	IncrementalMaximumNumber = 100  // 最大递增次数
+	CnyMinimumPaymentAmount  = 0.01
+	UsdtMinimumPaymentAmount = 0.01
+	UsdtAmountPerIncrement   = 0.01
+	IncrementalMaximumNumber = 100
 )
 
 var gCreateTransactionLock sync.Mutex
+var gOrderProcessingLock sync.Mutex
 
-// CreateTransaction 创建订单
+// CreateTransaction creates a new payment order.
 func CreateTransaction(req *request.CreateTransactionRequest) (*response.CreateTransactionResponse, error) {
 	gCreateTransactionLock.Lock()
 	defer gCreateTransactionLock.Unlock()
+
 	payAmount := math.MustParsePrecFloat64(req.Amount, 2)
-	// 按照汇率转化USDT
 	decimalPayAmount := decimal.NewFromFloat(payAmount)
 	decimalRate := decimal.NewFromFloat(config.GetUsdtRate())
 	decimalUsdt := decimalPayAmount.Div(decimalRate)
-	// cny 是否可以满足最低支付金额
 	if decimalPayAmount.Cmp(decimal.NewFromFloat(CnyMinimumPaymentAmount)) == -1 {
 		return nil, constant.PayAmountErr
 	}
-	// Usdt是否可以满足最低支付金额
 	if decimalUsdt.Cmp(decimal.NewFromFloat(UsdtMinimumPaymentAmount)) == -1 {
 		return nil, constant.PayAmountErr
 	}
-	// 已经存在了的交易
+
 	exist, err := data.GetOrderInfoByOrderId(req.OrderId)
 	if err != nil {
 		return nil, err
@@ -55,7 +53,7 @@ func CreateTransaction(req *request.CreateTransactionRequest) (*response.CreateT
 	if exist.ID > 0 {
 		return nil, constant.OrderAlreadyExists
 	}
-	// 有无可用钱包
+
 	walletAddress, err := data.GetAvailableWalletAddress()
 	if err != nil {
 		return nil, err
@@ -63,17 +61,20 @@ func CreateTransaction(req *request.CreateTransactionRequest) (*response.CreateT
 	if len(walletAddress) <= 0 {
 		return nil, constant.NotAvailableWalletAddress
 	}
+
+	tradeId := GenerateCode()
 	amount := math.MustParsePrecFloat64(decimalUsdt.InexactFloat64(), 2)
-	availableToken, availableAmount, err := CalculateAvailableWalletAndAmount(amount, walletAddress)
+	availableToken, availableAmount, err := ReserveAvailableWalletAndAmount(tradeId, amount, walletAddress)
 	if err != nil {
 		return nil, err
 	}
 	if availableToken == "" {
 		return nil, constant.NotAvailableAmountErr
 	}
+
 	tx := dao.Mdb.Begin()
 	order := &mdb.Orders{
-		TradeId:      GenerateCode(),
+		TradeId:      tradeId,
 		OrderId:      req.OrderId,
 		Amount:       req.Amount,
 		ActualAmount: availableAmount,
@@ -82,88 +83,90 @@ func CreateTransaction(req *request.CreateTransactionRequest) (*response.CreateT
 		NotifyUrl:    req.NotifyUrl,
 		RedirectUrl:  req.RedirectUrl,
 	}
-	err = data.CreateOrderWithTransaction(tx, order)
-	if err != nil {
+	if err = data.CreateOrderWithTransaction(tx, order); err != nil {
 		tx.Rollback()
+		_ = data.UnLockTransaction(availableToken, availableAmount)
 		return nil, err
 	}
-	// 锁定支付池
-	err = data.LockTransaction(availableToken, order.TradeId, availableAmount, config.GetOrderExpirationTimeDuration())
-	if err != nil {
+	if err = tx.Commit().Error; err != nil {
 		tx.Rollback()
+		_ = data.UnLockTransaction(availableToken, availableAmount)
 		return nil, err
 	}
-	tx.Commit()
-	// 超时过期消息队列
-	orderExpirationQueue, _ := handle.NewOrderExpirationQueue(order.TradeId)
-	mq.MClient.Enqueue(orderExpirationQueue, asynq.ProcessIn(config.GetOrderExpirationTimeDuration()),
-		asynq.Retention(config.GetOrderExpirationTimeDuration()),
-	)
-	ExpirationTime := carbon.Now().AddMinutes(config.GetOrderExpirationTime()).Timestamp()
+
+	expirationTime := carbon.Now().AddMinutes(config.GetOrderExpirationTime()).Timestamp()
 	resp := &response.CreateTransactionResponse{
 		TradeId:        order.TradeId,
 		OrderId:        order.OrderId,
 		Amount:         order.Amount,
 		ActualAmount:   order.ActualAmount,
 		Token:          order.Token,
-		ExpirationTime: ExpirationTime,
+		ExpirationTime: expirationTime,
 		PaymentUrl:     fmt.Sprintf("%s/pay/checkout-counter/%s", config.GetAppUri(), order.TradeId),
 	}
 	return resp, nil
 }
 
-// OrderProcessing 成功处理订单
+// OrderProcessing marks an order as paid and releases its sqlite reservation.
 func OrderProcessing(req *request.OrderProcessingRequest) error {
+	gOrderProcessingLock.Lock()
+	defer gOrderProcessingLock.Unlock()
+
 	tx := dao.Mdb.Begin()
 	exist, err := data.GetOrderByBlockIdWithTransaction(tx, req.BlockTransactionId)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
 	if exist.ID > 0 {
 		tx.Rollback()
 		return constant.OrderBlockAlreadyProcess
 	}
-	// 标记订单成功
-	err = data.OrderSuccessWithTransaction(tx, req)
+
+	updated, err := data.OrderSuccessWithTransaction(tx, req)
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
-	// 解锁交易
-	err = data.UnLockTransaction(req.Token, req.Amount)
-	if err != nil {
+	if !updated {
+		tx.Rollback()
+		return constant.OrderStatusConflict
+	}
+	if err = tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return err
 	}
-	tx.Commit()
+
+	if err = data.UnLockTransaction(req.Token, req.Amount); err != nil {
+		log.Sugar.Warnf("[order] unlock transaction after pay success failed, trade_id=%s, err=%v", req.TradeId, err)
+	}
 	return nil
 }
 
-// CalculateAvailableWalletAndAmount 计算可用钱包地址和金额
-func CalculateAvailableWalletAndAmount(amount float64, walletAddress []mdb.WalletAddress) (string, float64, error) {
+// ReserveAvailableWalletAndAmount finds and locks a token+amount pair.
+func ReserveAvailableWalletAndAmount(tradeId string, amount float64, walletAddress []mdb.WalletAddress) (string, float64, error) {
 	availableToken := ""
 	availableAmount := amount
-	calculateAvailableWalletFunc := func(amount float64) (string, error) {
-		availableWallet := ""
+
+	tryLockWalletFunc := func(targetAmount float64) (string, error) {
 		for _, address := range walletAddress {
-			token := address.Token
-			result, err := data.GetTradeIdByWalletAddressAndAmount(token, amount)
-			if err != nil {
-				return "", err
+			err := data.LockTransaction(address.Token, tradeId, targetAmount, config.GetOrderExpirationTimeDuration())
+			if err == nil {
+				return address.Token, nil
 			}
-			if result == "" {
-				availableWallet = token
-				break
+			if errors.Is(err, data.ErrTransactionLocked) {
+				continue
 			}
+			return "", err
 		}
-		return availableWallet, nil
+		return "", nil
 	}
+
 	for i := 0; i < IncrementalMaximumNumber; i++ {
-		token, err := calculateAvailableWalletFunc(availableAmount)
+		token, err := tryLockWalletFunc(availableAmount)
 		if err != nil {
 			return "", 0, err
 		}
-		// 拿不到可用钱包就累加金额
 		if token == "" {
 			decimalOldAmount := decimal.NewFromFloat(availableAmount)
 			decimalIncr := decimal.NewFromFloat(UsdtAmountPerIncrement)
@@ -176,15 +179,14 @@ func CalculateAvailableWalletAndAmount(amount float64, walletAddress []mdb.Walle
 	return availableToken, availableAmount, nil
 }
 
-// GenerateCode 订单号生成
+// GenerateCode creates a unique trade id.
 func GenerateCode() string {
 	date := time.Now().Format("20060102")
 	r := rand.Intn(1000)
-	code := fmt.Sprintf("%s%d%03d", date, time.Now().UnixNano()/1e6, r)
-	return code
+	return fmt.Sprintf("%s%d%03d", date, time.Now().UnixNano()/1e6, r)
 }
 
-// GetOrderInfoByTradeId 通过交易号获取订单
+// GetOrderInfoByTradeId returns a validated order.
 func GetOrderInfoByTradeId(tradeId string) (*mdb.Orders, error) {
 	order, err := data.GetOrderInfoByTradeId(tradeId)
 	if err != nil {

@@ -2,10 +2,12 @@ package config
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"net/url"
 	"os"
+	"path/filepath"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
 var (
@@ -41,6 +43,8 @@ func Init() {
 		"%s%s",
 		RuntimePath,
 		viper.GetString("log_save_path"))
+	mustMkdir(RuntimePath)
+	mustMkdir(LogSavePath)
 	MysqlDns = fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		url.QueryEscape(viper.GetString("mysql_user")),
 		url.QueryEscape(viper.GetString("mysql_passwd")),
@@ -52,6 +56,12 @@ func Init() {
 	TgBotToken = viper.GetString("tg_bot_token")
 	TgProxy = viper.GetString("tg_proxy")
 	TgManage = viper.GetInt64("tg_manage")
+}
+
+func mustMkdir(path string) {
+	if err := os.MkdirAll(path, 0o755); err != nil {
+		panic(err)
+	}
 }
 
 func GetAppVersion() string {
@@ -96,4 +106,47 @@ func GetOrderExpirationTime() int {
 func GetOrderExpirationTimeDuration() time.Duration {
 	timer := GetOrderExpirationTime()
 	return time.Minute * time.Duration(timer)
+}
+
+func GetRuntimeSqlitePath() string {
+	filename := viper.GetString("runtime_sqlite_filename")
+	if filename == "" {
+		filename = "epusdt-runtime.db"
+	}
+	if filepath.IsAbs(filename) {
+		return filename
+	}
+	return filepath.Join(RuntimePath, filename)
+}
+
+func GetQueueConcurrency() int {
+	concurrency := viper.GetInt("queue_concurrency")
+	if concurrency <= 0 {
+		return 10
+	}
+	return concurrency
+}
+
+func GetQueuePollInterval() time.Duration {
+	interval := viper.GetInt("queue_poll_interval_ms")
+	if interval <= 0 {
+		interval = 1000
+	}
+	return time.Duration(interval) * time.Millisecond
+}
+
+func GetOrderNoticeMaxRetry() int {
+	retry := viper.GetInt("order_notice_max_retry")
+	if retry < 0 {
+		return 0
+	}
+	return retry
+}
+
+func GetCallbackRetryBaseDuration() time.Duration {
+	seconds := viper.GetInt("callback_retry_base_seconds")
+	if seconds <= 0 {
+		seconds = 5
+	}
+	return time.Duration(seconds) * time.Second
 }

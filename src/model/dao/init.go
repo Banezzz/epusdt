@@ -9,7 +9,7 @@ func Init() {
 		log.Fatalf("DBInit err: %v", err)
 	}
 
-	if err := RedisInit(); err != nil {
-		log.Fatalf("RedisInit err: %v", err)
+	if err := RuntimeInit(); err != nil {
+		log.Fatalf("RuntimeInit err: %v", err)
 	}
 }
