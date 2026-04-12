@@ -1,6 +1,8 @@
 package comm
 
 import (
+	"encoding/json"
+	"fmt"
 	"html/template"
 	"net/http"
 	"path/filepath"
@@ -30,7 +32,13 @@ func (c *BaseCommController) CheckoutCounter(ctx echo.Context) (err error) {
 	if err != nil {
 		return ctx.String(http.StatusOK, err.Error())
 	}
-	resp.Network = "TRON"
+
+	jsonByte, err := json.MarshalIndent(resp, "", "  ")
+	if err != nil {
+		return ctx.String(http.StatusOK, err.Error())
+	}
+	fmt.Printf("%v\n", string(jsonByte))
+
 	return tmpl.Execute(ctx.Response(), resp)
 }
 

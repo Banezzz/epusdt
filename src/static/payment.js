@@ -1,24 +1,86 @@
+/* =============================================================
+ *  GM Pay — payment.js
+ *  后端对接只需关注:
+ *    1. CONFIG.api.selectMethod — Step 1 确认接口（POST 币种/网络，返回收款地址）
+ *    2. CONFIG.api.checkStatus  — 轮询接口 URL
+ *    3. CONFIG.api.statusMap    — 状态码映射
+ *    4. index.html 底部 <script> 中 ORDER / PAYMENT_OPTIONS 变量
+ * ============================================================= */
 
+'use strict';
 
-// DOM helpers
+// ── DOM helpers ───────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
 const $$ = (sel) => document.querySelectorAll(sel);
-
-// ---- Network Tag ----
-const _CHAIN_PRESETS = {
-  Ethereum: { bg: 'hsla(0,0%,55%,0.25)',      color: 'hsla(0,0%,55%,1)',      icon: 'ethereum' },
-  Solana:   { bg: 'hsla(256,85%,65%,0.25)',   color: 'hsla(256,85%,65%,1)',   icon: 'solana' },
-  BSC:      { bg: 'hsla(46,91%,49%,0.25)',    color: 'hsla(46,91%,49%,1)',    icon: 'bsc' },
-  Arbitrum: { bg: 'hsla(202,100%,54%,0.25)',  color: 'hsla(202,100%,54%,1)',  icon: 'arbitrum' },
-  TRON:     { bg: 'hsla(350,100%,47%,0.20)',  color: 'hsla(350,100%,47%,1)',  icon: 'tron' },
-  Polygon:  { bg: 'hsla(263,73%,56%,0.25)',   color: 'hsla(263,73%,56%,1)',   icon: 'polygon' },
-  Base:     { bg: 'hsla(240,100%,61%,0.25)',  color: 'hsla(240,100%,61%,1)',  icon: 'base' },
-  OP:       { bg: 'hsla(353,99%,51%,0.25)',   color: 'hsla(353,99%,51%,1)',   icon: 'op' },
-  HyperEVM: { bg: 'hsla(166,94%,79%,0.20)',  color: 'hsla(166,94%,79%,1)',   icon: 'hyperevm' },
-  Plasma:   { bg: 'hsla(166,64%,32%,0.25)',   color: 'hsla(166,64%,32%,1)',   icon: 'plasma' },
-  Bitcoin:  { bg: 'hsla(33,93%,54%,0.20)',    color: 'hsla(33,93%,54%,1)',    icon: 'bitcoin' },
-  Binance:  { bg: 'hsla(46,91%,49%,0.24)',    color: 'hsla(46,91%,49%,1)',    icon: 'binance' },
+const setText = (id, value) => {
+  const el = $(id);
+  if (el) el.textContent = value;
+  return el;
 };
+const setHtml = (id, value) => {
+  const el = $(id);
+  if (el) el.innerHTML = value;
+  return el;
+};
+
+// ── 全局配置（可按项目调整）─────────────────────────────────
+const CONFIG = {
+  poll: {
+    interval:  5000,   // 轮询间隔（毫秒）
+    maxErrors: 5,      // 最多连续错误次数，超出进入 timeout 状态
+    timeout:   8000,   // 单次请求超时（毫秒）
+  },
+  redirect: {
+    delay: 3000,       // 支付成功后自动跳转延迟（毫秒）
+  },
+  // ---- 后端接口 ----
+  api: {
+    // 切换网络接口：POST { trade_id, token, network }，返回完整订单对象
+    selectMethod: () => '/pay/switch-network',
+    // 轮询接口：GET，返回 { data: { status: number } }
+    checkStatus: (tradeId) => `/pay/check-status/${encodeURIComponent(tradeId)}`,
+    // status 状态码映射
+    statusMap: {
+      paid:    2,   // 支付成功
+      expired: 3,   // 已过期
+    },
+  },
+  // ---- 连接钱包 ----
+  wallet: {
+    enabled: false,   // false = 隐藏「连接钱包支付」按钮
+    // TronLink deeplink，如需支持其他钱包替换此处
+    deeplink: (currentUrl) => {
+      const param = JSON.stringify({
+        url:       currentUrl,
+        action:    'open',
+        dapp_name: 'GM Pay',
+        dapp_icon: 'https://www.gmwallet.app/favicon.png',
+      });
+      return 'tronlinkoutside://pull.activity?param=' + encodeURIComponent(param);
+    },
+  },
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+//  SECTION 1 — 链图标 / 网络渲染
+// ═══════════════════════════════════════════════════════════════
+
+const _CHAIN_PRESETS = {
+  Ethereum: { bg: 'hsla(0,0%,55%,0.25)',     color: 'hsla(0,0%,55%,1)',     icon: 'ethereum' },
+  Solana:   { bg: 'hsla(256,85%,65%,0.25)',  color: 'hsla(256,85%,65%,1)',  icon: 'solana'   },
+  BSC:      { bg: 'hsla(46,91%,49%,0.25)',   color: 'hsla(46,91%,49%,1)',   icon: 'bsc'      },
+  Arbitrum: { bg: 'hsla(202,100%,54%,0.25)', color: 'hsla(202,100%,54%,1)', icon: 'arbitrum' },
+  TRON:     { bg: 'hsla(350,100%,47%,0.20)', color: 'hsla(350,100%,47%,1)', icon: 'tron'     },
+  Polygon:  { bg: 'hsla(263,73%,56%,0.25)',  color: 'hsla(263,73%,56%,1)',  icon: 'polygon'  },
+  Base:     { bg: 'hsla(240,100%,61%,0.25)', color: 'hsla(240,100%,61%,1)', icon: 'base'     },
+  OP:       { bg: 'hsla(353,99%,51%,0.25)',  color: 'hsla(353,99%,51%,1)',  icon: 'op'       },
+  HyperEVM: { bg: 'hsla(166,94%,79%,0.20)', color: 'hsla(166,94%,79%,1)',  icon: 'hyperevm' },
+  Plasma:   { bg: 'hsla(166,64%,32%,0.25)',  color: 'hsla(166,64%,32%,1)',  icon: 'plasma'   },
+  Bitcoin:  { bg: 'hsla(33,93%,54%,0.20)',   color: 'hsla(33,93%,54%,1)',   icon: 'bitcoin'  },
+  Binance:  { bg: 'hsla(46,91%,49%,0.24)',   color: 'hsla(46,91%,49%,1)',   icon: 'binance'  },
+};
+
 const _CHAIN_ALIASES = {
   evm:'Ethereum', eth:'Ethereum', ethereum:'Ethereum',
   bsc:'BSC', bnb:'BSC',
@@ -33,22 +95,68 @@ const _CHAIN_ALIASES = {
   bitcoin:'Bitcoin', btc:'Bitcoin',
   binance:'Binance', bnb_chain:'Binance',
 };
+
+const IMAGE_PREFIX = {
+  chain: '/static/images/',
+  tokenTrigger: 'https://cdn.jsdmirror.com/gh/atomiclabs/cryptocurrency-icons@1a63530/128/color/',
+  tokenMenu: 'https://cdn.jsdmirror.com/gh/atomiclabs/cryptocurrency-icons@1a63530/128/color/',
+};
+
 function _resolveChain(name) {
   if (!name) return null;
   const k = name.trim().toLowerCase();
   const canonical = _CHAIN_ALIASES[k] || Object.keys(_CHAIN_PRESETS).find(c => c.toLowerCase() === k);
   return canonical ? { label: canonical, ..._CHAIN_PRESETS[canonical] } : null;
 }
+
+/** 用于 order-info 顶部的网络 tag badge */
 function networkTag(network) {
   const chain = _resolveChain(network);
   if (!chain) return `<span style="font-weight:600;color:var(--card-foreground)">${network}</span>`;
-  return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px 2px 4px;border-radius:99px;background:${chain.bg};color:${chain.color};font-size:12px;font-weight:600;line-height:1.6"><img src="/static/images/${chain.icon}.png" width="14" height="14" style="width:14px;height:14px;border-radius:50%;object-fit:cover;flex-shrink:0" />${chain.label}</span>`;
+  return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px 2px 4px;border-radius:99px;background:${chain.bg};color:${chain.color};font-size:12px;font-weight:600;line-height:1.6">
+    <img src="${IMAGE_PREFIX.chain}${chain.icon}.png" width="14" height="14" style="width:14px;height:14px;border-radius:50%;object-fit:cover;flex-shrink:0" />
+    ${chain.label}
+  </span>`;
 }
 
-// Initialize Lucide icons
+/** 选择器触发器显示：网络 */
+function _networkTriggerHtml(network) {
+  const chain = _resolveChain(network);
+  if (!chain) return `<span class="text-sm font-semibold" style="color:var(--card-foreground)">${network || '--'}</span>`;
+  return `<span style="display:inline-flex;align-items:center;gap:7px">
+    <img src="${IMAGE_PREFIX.chain}${chain.icon}.png" width="18" height="18" style="width:18px;height:18px;border-radius:50%;object-fit:cover;flex-shrink:0" />
+    <span class="text-sm font-semibold" style="color:var(--card-foreground)">${chain.label}</span>
+  </span>`;
+}
+
+/** 选择器触发器显示：Token */
+function _tokenTriggerHtml(token) {
+  if (!token) return `<span class="text-sm font-semibold" style="color:var(--card-foreground)">--</span>`;
+  const src = `${IMAGE_PREFIX.tokenTrigger}${token.toLowerCase()}.png`;
+  return `<span style="display:inline-flex;align-items:center;gap:7px">
+    <img src="${src}" width="18" height="18" style="width:18px;height:18px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'" />
+    <span class="text-sm font-semibold" style="color:var(--card-foreground)">${token}</span>
+  </span>`;
+}
+
+/** 下拉菜单中的网络选项 */
+function _networkMenuItemHtml(opt, selected) {
+  const chain = _resolveChain(opt.network);
+  const icon = chain
+    ? `<img src="${IMAGE_PREFIX.chain}${chain.icon}.png" width="16" height="16" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0" />`
+    : '';
+  return `<div class="select-option menu-item${selected ? ' is-selected' : ''}"
+    onclick="step1SetNetwork('${opt.network}')"
+    style="display:flex;align-items:center;gap:8px">${icon}${chain ? chain.label : opt.network}</div>`;
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  SECTION 2 — 主题 & Lucide 图标
+// ═══════════════════════════════════════════════════════════════
+
 if (typeof lucide !== 'undefined') lucide.createIcons();
 
-// Theme
 let currentTheme = localStorage.getItem('theme') || 'dark';
 applyTheme(currentTheme);
 
@@ -66,17 +174,19 @@ function toggleTheme(e) {
   const x = e ? e.clientX : window.innerWidth / 2;
   const y = e ? e.clientY : window.innerHeight / 2;
   const r = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
-  const transition = document.startViewTransition(() => applyTheme(next));
-  transition.ready.then(() => {
-    const clip = [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`];
+  document.startViewTransition(() => applyTheme(next)).ready.then(() => {
     document.documentElement.animate(
-      { clipPath: clip },
+      { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] },
       { duration: 420, easing: 'ease-in-out', pseudoElement: '::view-transition-new(root)' }
     );
   });
 }
 
-// i18n
+
+// ═══════════════════════════════════════════════════════════════
+//  SECTION 3 — 国际化 (i18n)
+// ═══════════════════════════════════════════════════════════════
+
 const LANGS = {
   en: {
     scan_title:          'Scan or copy address to pay',
@@ -99,6 +209,11 @@ const LANGS = {
     back:                'Back',
     order_not_found:     'Order Not Found',
     not_found_sub:       'The order does not exist or has already expired',
+    select_method:       'Select payment method',
+    currency_label:      'Currency',
+    network_label:       'Network',
+    confirm:             'Confirm',
+    connect_wallet:      'Connect Wallet to Pay',
   },
   zh: {
     scan_title:          '扫码或复制地址付款',
@@ -121,6 +236,11 @@ const LANGS = {
     back:                '返回',
     order_not_found:     '订单不存在',
     not_found_sub:       '待支付订单不存在或已过期',
+    select_method:       '选择支付方式',
+    currency_label:      '币种',
+    network_label:       '网络',
+    confirm:             '确认',
+    connect_wallet:      '连接钱包支付',
   },
   ja: {
     scan_title:          'アドレスをスキャンまたはコピーして支払う',
@@ -143,6 +263,11 @@ const LANGS = {
     back:                '戻る',
     order_not_found:     '注文が見つかりません',
     not_found_sub:       '注文が存在しないか、すでに期限切れです',
+    select_method:       '支払い方法を選択',
+    currency_label:      '通貨',
+    network_label:       'ネットワーク',
+    confirm:             '確認',
+    connect_wallet:      'ウォレットで支払う',
   },
   ko: {
     scan_title:          '주소를 스캔하거나 복사하여 결제',
@@ -165,6 +290,11 @@ const LANGS = {
     back:                '돌아가기',
     order_not_found:     '주문 없음',
     not_found_sub:       '주문이 존재하지 않거나 이미 만료되었습니다',
+    select_method:       '결제 수단 선택',
+    currency_label:      '통화',
+    network_label:       '네트워크',
+    confirm:             '확인',
+    connect_wallet:      '지갑으로 결제',
   },
   'zh-hk': {
     scan_title:          '掃碼或複製地址付款',
@@ -187,6 +317,11 @@ const LANGS = {
     back:                '返回',
     order_not_found:     '訂單不存在',
     not_found_sub:       '待支付訂單不存在或已過期',
+    select_method:       '選擇支付方式',
+    currency_label:      '幣種',
+    network_label:       '網絡',
+    confirm:             '確認',
+    connect_wallet:      '連接錢包支付',
   },
   ru: {
     scan_title:          'Отсканируйте или скопируйте адрес для оплаты',
@@ -209,12 +344,18 @@ const LANGS = {
     back:                'Назад',
     order_not_found:     'Заказ не найден',
     not_found_sub:       'Заказ не существует или уже истёк',
+    select_method:       'Выберите способ оплаты',
+    currency_label:      'Валюта',
+    network_label:       'Сеть',
+    confirm:             'Подтвердить',
+    connect_wallet:      'Оплатить через кошелёк',
   },
 };
 
-const LANG_LABELS = { en: 'EN', zh: '中文', 'zh-hk': '繁體', ja: '日本語', ko: '한국어', ru: 'RU' };
-const SUPPORTED_LANGS = Object.keys(LANGS); // ['en','zh','ja','ko','zh-hk','ru']
+const LANG_LABELS    = { en: 'EN', zh: '中文', 'zh-hk': '繁體', ja: '日本語', ko: '한국어', ru: 'RU' };
+const SUPPORTED_LANGS = Object.keys(LANGS);
 let currentLang = 'en';
+
 const t = (key) => LANGS[currentLang]?.[key] ?? key;
 
 function detectLang() {
@@ -239,34 +380,38 @@ function setLang(lang) {
     const v = t(el.dataset.i18n);
     if (v) el.textContent = v;
   });
-  $('lang-label').textContent = LANG_LABELS[lang];
+  setText('lang-label', LANG_LABELS[lang]);
   $$('#dd-lang-menu .select-option').forEach(o =>
     o.classList.toggle('is-selected', o.dataset.lang === lang));
   closeAllSelects();
-  if (ORDER.tradeId) { renderOrderId(); }
-  if (ORDER.amount && !ORDER.amount.startsWith('{{')) {
+  // 重新渲染含翻译文案的动态行
+  if (ORDER?.tradeId) renderOrderId();
+  if (ORDER?.amount && !ORDER.amount.startsWith('{{')) {
     renderRow('display-fiat', t('order_amount'), `${ORDER.amount} ${ORDER.currency || ''}`);
   }
-  requestAnimationFrame(syncStatusCardHeight);
 }
 
-// Select dropdown
+
+// ═══════════════════════════════════════════════════════════════
+//  SECTION 4 — 下拉选择器
+// ═══════════════════════════════════════════════════════════════
+
 function toggleSelect(id) {
-  const wrap = $(id);
+  const wrap    = $(id);
   const trigger = wrap.querySelector('.select-trigger');
-  const menu = wrap.querySelector('.select-menu');
+  const menu    = wrap.querySelector('.select-menu');
   const wasOpen = menu.classList.contains('is-open');
   closeAllSelects();
   if (!wasOpen) {
     menu.classList.add('is-open');
-    trigger.classList.add('is-open');
+    trigger?.classList.add('is-open');
   }
 }
 
 function closeAllSelects() {
   $$('.select-menu.is-open').forEach(m => {
     m.classList.remove('is-open');
-    m.closest('.select-wrap').querySelector('.select-trigger').classList.remove('is-open');
+    m.closest('.select-wrap')?.querySelector('.select-trigger')?.classList.remove('is-open');
   });
 }
 
@@ -274,17 +419,22 @@ document.addEventListener('click', (e) => {
   if (!e.target.closest('.select-wrap')) closeAllSelects();
 });
 
-// Clipboard fallback (used when ClipboardJS is unavailable)
+
+// ═══════════════════════════════════════════════════════════════
+//  SECTION 5 — Toast & Clipboard
+// ═══════════════════════════════════════════════════════════════
+
 const CHECK_ICON = '<i data-lucide="check" width="15" height="15" stroke-width="2.5" color="#22c55e"></i>';
 
-function showToast() {
+function showToast(msg) {
   const el = $('toast');
-  el.textContent = t('copied');
-  el.style.opacity = '1';
+  if (!el) return;
+  el.textContent = msg || t('copied');
+  el.style.opacity   = '1';
   el.style.transform = 'translateX(-50%) translateY(0)';
   clearTimeout(el._tid);
   el._tid = setTimeout(() => {
-    el.style.opacity = '0';
+    el.style.opacity   = '0';
     el.style.transform = 'translateX(-50%) translateY(10px)';
   }, 2000);
 }
@@ -298,91 +448,17 @@ function flashCheck(btnId) {
   setTimeout(() => { btn.innerHTML = orig; lucide.createIcons({ nodes: [btn] }); }, 1800);
 }
 
-// Transfer button
-function handleTransfer() {
-  const btn = $('btn-transferred');
-  const span = btn.querySelector('span');
-  span.textContent = t('verifying');
-  btn.disabled = true;
-  _pollErrors = 0;
-  _pollStopped = false;
-  clearTimeout(_pollTimer);
-  checkOrderStatus();
-  setTimeout(() => {
-    span.textContent = t('i_have_transferred');
-    btn.disabled = false;
-  }, 4000);
-}
-
-// Order
-function truncateAddr(addr) {
-  return addr.length > 10 ? `${addr.slice(0, 4)}...${addr.slice(-6)}` : addr;
-}
-
-function formatAddr(addr) {
-  if (!addr || addr.length <= 10) return addr;
-  const pre = addr.slice(0, 4);
-  const mid = addr.slice(4, -6);
-  const suf = addr.slice(-6);
-  return `<span style="font-weight:800;color:var(--primary)">${pre}</span><span style="color:var(--muted-foreground)">${mid}</span><span style="font-weight:800;color:var(--primary)">${suf}</span>`;
-}
-
-function renderRow(id, label, value) {
-  const el = $(id);
-  if (el) el.innerHTML = `<td style="width:1%;white-space:nowrap;padding-right:0.75em;">${label}</td><td style="color:var(--card-foreground);font-weight:500;word-break:break-all">${value}</td>`;
-}
-
-function renderOrderId() {
-  if (ORDER.tradeId && !ORDER.tradeId.startsWith('{{')) {
-    renderRow('display-order-id', t('order_id'), ORDER.tradeId);
-  }
-}
-
-function initOrder() {
-  if (!ORDER.tradeId || ORDER.tradeId.startsWith('{{')) {
-    showNotFound();
-    return;
-  }
-
-  $('display-amount').textContent = `${ORDER.actualAmount} ${ORDER.token}`;
-  $('field-amount').textContent   = `${ORDER.actualAmount} ${ORDER.token}`;
-  $('field-address').innerHTML    = formatAddr(ORDER.receiveAddress);
-  if (ORDER.amount && !ORDER.amount.startsWith('{{')) {
-    renderRow('display-fiat', t('order_amount'), `${ORDER.amount} ${ORDER.currency || ''}`);
-  }
-  $('display-network').innerHTML = networkTag(ORDER.network);
-  renderOrderId();
-
-  new QRCode($('qrcode'), {
-    text:         ORDER.receiveAddress,
-    width:        176,
-    height:       176,
-    colorDark:    '#111111',
-    colorLight:   '#ffffff',
-    correctLevel: QRCode.CorrectLevel.M,
-  });
-
-  initCountdown();
-  checkOrderStatus();
-  initClipboard();
-}
-
-// Clipboard
 let _clipboard = null;
 
 function initClipboard() {
   const targets = [
-    { id: 'copy-amt-box',    text: ORDER.actualAmount, iconId: 'btn-copy-amt2'   },
-    { id: 'copy-addr-box',   text: ORDER.receiveAddress, iconId: 'btn-copy-addr' },
-    { id: 'btn-copy-amount', text: ORDER.actualAmount, iconId: 'btn-copy-amount' },
+    { id: 'copy-addr-box',   text: ORDER.receiveAddress, iconId: 'btn-copy-addr'   },
+    { id: 'btn-copy-amount', text: ORDER.actualAmount,   iconId: 'btn-copy-amount' },
   ];
+  targets.forEach(({ id, text }) => $(id)?.setAttribute('data-clipboard-text', text));
 
   if (typeof ClipboardJS !== 'undefined') {
-    targets.forEach(({ id, text }) => {
-      const el = $(id);
-      if (el) el.setAttribute('data-clipboard-text', text);
-    });
-    if (_clipboard) _clipboard.destroy();
+    _clipboard?.destroy();
     _clipboard = new ClipboardJS(targets.map(c => '#' + c.id).join(', '));
     _clipboard.on('success', e => {
       e.clearSelection();
@@ -392,79 +468,362 @@ function initClipboard() {
     });
   }
 }
-// Countdown color interpolation (green → orange → red by ratio)
-function lerpColor(a, b, t) {
-  return `rgb(${Math.round(a[0]+(b[0]-a[0])*t)},${Math.round(a[1]+(b[1]-a[1])*t)},${Math.round(a[2]+(b[2]-a[2])*t)})`;
+
+
+// ═══════════════════════════════════════════════════════════════
+//  SECTION 6 — 面板切换 & 导航
+// ═══════════════════════════════════════════════════════════════
+
+const PANEL_IDS = {
+  step1:       'step1-panel',
+  payment:     'payment-panel',
+  success:     'screen-success',
+  expired:     'screen-expired',
+  timeout:     'screen-timeout',
+  'not-found': 'screen-not-found',
+};
+const PANEL_ORDER = ['step1', 'payment', 'success', 'expired', 'timeout', 'not-found'];
+let _currentPanel = 'step1';
+
+function slideTo(name, dir) {
+  const fromEl   = $(PANEL_IDS[_currentPanel]);
+  const toEl     = $(PANEL_IDS[name]);
+  const viewport = $('panel-viewport');
+  if (!toEl || name === _currentPanel) return;
+
+  const d = dir ?? (PANEL_ORDER.indexOf(name) >= PANEL_ORDER.indexOf(_currentPanel) ? 1 : -1);
+  _currentPanel = name;
+
+  if (viewport) viewport.style.overflowX = 'hidden'; // 动画期间裁剪
+
+  if (fromEl) {
+    Object.assign(fromEl.style, { position: 'absolute', top: '0', left: '0', width: '100%' });
+    fromEl.style.animation = `${d > 0 ? 'slide-out-l' : 'slide-out-r'} 0.38s cubic-bezier(.4,0,.2,1) forwards`;
+    fromEl.addEventListener('animationend', () => {
+      fromEl.style.cssText = 'display:none';
+      if (viewport) viewport.style.overflowX = '';
+    }, { once: true });
+  } else if (viewport) {
+    setTimeout(() => { viewport.style.overflowX = ''; }, 420);
+  }
+
+  toEl.style.display   = '';
+  toEl.style.animation = `${d > 0 ? 'slide-in-r' : 'slide-in-l'} 0.38s cubic-bezier(.4,0,.2,1) forwards`;
 }
-function ratioColor(ratio) {
+
+function showStatePanel(state) {
+  const isNotFound = state === 'not-found';
+  const orderInfo = $('order-info');
+  const stepProgress = $('step-progress');
+  if (orderInfo) orderInfo.style.display = isNotFound ? 'none' : '';
+  if (stepProgress) stepProgress.style.display = isNotFound ? 'none' : '';
+  slideTo(state);
+}
+
+function hideStatePanel() {
+  const orderInfo = $('order-info');
+  const stepProgress = $('step-progress');
+  if (orderInfo) orderInfo.style.display = '';
+  if (stepProgress) stepProgress.style.display = '';
+  slideTo('payment', -1);
+}
+
+function goBack() {
+  if (ORDER?.redirectUrl && !ORDER.redirectUrl.startsWith('{{')) {
+    window.location.href = ORDER.redirectUrl;
+  } else if (document.referrer) {
+    window.location.href = document.referrer;
+  } else {
+    history.back();
+  }
+}
+
+function syncStatusCardHeight() {} // 兼容旧调用，保留空桩
+
+
+// ═══════════════════════════════════════════════════════════════
+//  SECTION 7 — 步骤进度条
+// ═══════════════════════════════════════════════════════════════
+
+function setStepBar(step) {
+  const f1 = $('step-fill-1');
+  const f2 = $('step-fill-2');
+  if (!f1) return;
+  const BASE = 'height:100%;border-radius:9999px;background:var(--foreground);';
+  if (step === 1) {
+    f1.style.cssText = BASE + 'animation:fill-bar 0.9s ease-out forwards';
+    f2.style.cssText = BASE + 'width:0%';
+  } else {
+    f1.style.cssText = BASE + 'width:100%';
+    f2.style.cssText = BASE + 'animation:fill-bar 0.9s ease-out forwards';
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  SECTION 8 — Step 1 — 币种 & 网络选择
+// ═══════════════════════════════════════════════════════════════
+
+let _step1Token = null;
+let _step1Opt   = null;
+
+// 内置优先网络，按顺序匹配第一个可用选项
+const _PREFERRED_NETWORKS = ['TRON', 'Solana'];
+
+function initStep1() {
+  // 按内置优先顺序找到首个可用选项
+  _step1Opt = null;
+  for (const net of _PREFERRED_NETWORKS) {
+    _step1Opt = PAYMENT_OPTIONS.find(
+      o => (_resolveChain(o.network)?.label ?? o.network) === net
+    );
+    if (_step1Opt) break;
+  }
+  _step1Opt   = _step1Opt ?? PAYMENT_OPTIONS[0];
+  _step1Token = _step1Opt.token;
+  _renderNetworkMenu();
+  _renderTokenMenu();
+}
+
+function _renderTokenMenu() {
+  // 按当前选中网络过滤可用币种
+  const opts = PAYMENT_OPTIONS.filter(o => o.network === _step1Opt?.network);
+  const tokens = [...new Set(opts.map(o => o.token))];
+  // 若当前 token 在新网络下不存在则重置为第一个
+  if (!tokens.includes(_step1Token)) {
+    _step1Token = tokens[0] ?? null;
+    _step1Opt   = opts[0] ?? _step1Opt;
+  }
+  const menu = $('dd-token-menu');
+  if (!menu) return;
+  menu.innerHTML = tokens.map(tok => {
+    const src = `${IMAGE_PREFIX.tokenMenu}${tok.toLowerCase()}.png`;
+    return `<div class="select-option menu-item${tok === _step1Token ? ' is-selected' : ''}"
+      onclick="step1SetToken('${tok}')"
+      style="display:flex;align-items:center;gap:8px">
+      <img src="${src}" width="16" height="16" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'" />
+      ${tok}
+    </div>`;
+  }).join('');
+  setHtml('token-label', _tokenTriggerHtml(_step1Token));
+}
+
+function _renderNetworkMenu() {
+  // 去重，每个网络只显示一项
+  const seen = new Set();
+  const networkOpts = PAYMENT_OPTIONS.filter(o => {
+    if (seen.has(o.network)) return false;
+    seen.add(o.network);
+    return true;
+  });
+  const menu = $('dd-network-menu');
+  if (menu) menu.innerHTML = networkOpts.map(opt => _networkMenuItemHtml(opt, opt.network === _step1Opt?.network)).join('');
+  setHtml('network-label', _networkTriggerHtml(_step1Opt?.network || '--'));
+}
+
+function step1SetToken(tok) {
+  _step1Token = tok;
+  // 在当前网络下找对应 opt
+  _step1Opt = PAYMENT_OPTIONS.find(o => o.network === _step1Opt?.network && o.token === tok) ?? _step1Opt;
+  setHtml('token-label', _tokenTriggerHtml(tok));
+  $$('#dd-token-menu .select-option').forEach(o =>
+    o.classList.toggle('is-selected', o.textContent.trim() === tok));
+  closeAllSelects();
+}
+
+function step1SetNetwork(networkName) {
+  // 找该网络下第一个 opt 作为默认
+  _step1Opt = PAYMENT_OPTIONS.find(o => o.network === networkName) ?? _step1Opt;
+  const chain = _resolveChain(networkName);
+  const label = chain ? chain.label : networkName;
+  $$('#dd-network-menu .select-option').forEach(o =>
+    o.classList.toggle('is-selected', o.textContent.trim() === label));
+  setHtml('network-label', _networkTriggerHtml(_step1Opt.network));
+  _renderTokenMenu();
+  closeAllSelects();
+}
+
+async function confirmStep1() {
+  const opt = _step1Opt || PAYMENT_OPTIONS[0];
+  const btn  = $('btn-confirm-step1');
+  const span = btn?.querySelector('span') ?? btn;
+  const origText = span?.textContent;
+
+  // 1. 乐观 UI：禁用按钮防止重复提交
+  if (btn) { btn.disabled = true; if (span) span.textContent = '…'; }
+
+  try {
+    const res = await fetch(CONFIG.api.selectMethod(), {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body:    JSON.stringify({
+        trade_id: ORDER.tradeId,
+        token:    opt.token.toLowerCase(),
+        network:  opt.network.toLowerCase(),
+      }),
+      signal:  AbortSignal.timeout(10000),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const resp = await res.json();
+    const data = resp?.data ?? resp;
+
+    // 2. 用后端返回的完整订单字段更新 ORDER，本地选项作为兜底
+    ORDER.tradeId        = data?.trade_id        ?? ORDER.tradeId;
+    // 同步新 trade_id 到 URL（路径末段），轮询将自动使用最新值
+    if (data?.trade_id) {
+      const _url = new URL(window.location.href);
+      _url.pathname = _url.pathname.replace(/\/[^/]+$/, '/' + encodeURIComponent(data.trade_id));
+      history.replaceState(null, '', _url.toString());
+      renderOrderId();
+    }
+    ORDER.token          = data?.token           ?? opt.token;
+    ORDER.network        = data?.network         ?? opt.network;
+    ORDER.actualAmount   = data?.actual_amount   != null ? String(data.actual_amount) : opt.actualAmount;
+    ORDER.amount         = data?.amount          != null ? String(data.amount)         : ORDER.amount;
+    ORDER.currency       = data?.currency        ?? ORDER.currency;
+    ORDER.receiveAddress = data?.receive_address ?? opt.receiveAddress;
+    if (data?.expiration_time != null) ORDER.expirationTime = String(data.expiration_time);
+    if (data?.created_at      != null) ORDER.createdAt      = String(data.created_at);
+    if (data?.redirect_url)            ORDER.redirectUrl    = data.redirect_url;
+
+    setStepBar(2);
+    slideTo('payment');
+    initOrder();
+  } catch (err) {
+    console.error('[confirmStep1]', err);
+    showToast('⚠ ' + (err.message || 'Request failed'));
+  } finally {
+    if (btn) { btn.disabled = false; if (span && origText) span.textContent = origText; }
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  SECTION 9 — 订单渲染 & 倒计时
+// ═══════════════════════════════════════════════════════════════
+
+function truncateAddr(addr) {
+  return addr && addr.length > 10 ? `${addr.slice(0, 4)}...${addr.slice(-6)}` : addr;
+}
+
+function formatAddr(addr) {
+  if (!addr || addr.length <= 10) return addr;
+  return `<span style="font-weight:800;color:var(--primary)">${addr.slice(0, 4)}</span>`
+       + `<span style="color:var(--muted-foreground)">${addr.slice(4, -6)}</span>`
+       + `<span style="font-weight:800;color:var(--primary)">${addr.slice(-6)}</span>`;
+}
+
+function renderRow(id, label, value) {
+  const el = $(id);
+  if (el) el.innerHTML = `
+    <td style="width:1%;white-space:nowrap;padding-right:0.75em">${label}</td>
+    <td style="color:var(--card-foreground);font-weight:500;word-break:break-all">${value}</td>`;
+}
+
+function renderOrderId() {
+  if (ORDER?.tradeId && !ORDER.tradeId.startsWith('{{')) {
+    renderRow('display-order-id', t('order_id'), ORDER.tradeId);
+  }
+}
+
+function initOrder() {
+  if (!ORDER?.tradeId || ORDER.tradeId.startsWith('{{')) { showNotFound(); return; }
+
+  setText('display-amount', `${ORDER.actualAmount} ${ORDER.token}`);
+  setHtml('field-address', formatAddr(ORDER.receiveAddress));
+  setHtml('display-network', networkTag(ORDER.network));
+
+  if (ORDER.amount && !ORDER.amount.startsWith('{{')) {
+    renderRow('display-fiat', t('order_amount'), `${ORDER.amount} ${ORDER.currency || ''}`);
+  }
+  renderOrderId();
+
+  const qrcodeEl = $('qrcode');
+  if (qrcodeEl) {
+    new QRCode(qrcodeEl, {
+      text:         ORDER.receiveAddress,
+      width:        176,
+      height:       176,
+      colorDark:    '#111111',
+      colorLight:   '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M,
+    });
+  }
+
+  initCountdown();
+  checkOrderStatus();
+  initClipboard();
+}
+
+// 倒计时内部状态
+const CIRCUMFERENCE = 2 * Math.PI * 20;
+const _pad = (n) => String(n).padStart(2, '0');
+let _countdownInterval = null;
+let _totalSeconds      = 0;
+let _expiresAt         = null;
+
+function _lerpColor(a, b, ratio) {
+  return `rgb(${[0,1,2].map(i => Math.round(a[i] + (b[i] - a[i]) * ratio)).join(',')})`;
+}
+function _ratioColor(ratio) {
   if (ratio >= 0.5) return '#22c55e';
-  if (ratio >= 0.2) return lerpColor([34,197,94], [249,115,22], (0.5 - ratio) / 0.3);
-  return lerpColor([249,115,22], [239,68,68], (0.2 - ratio) / 0.2);
+  if (ratio >= 0.2) return _lerpColor([34,197,94], [249,115,22], (0.5 - ratio) / 0.3);
+  return _lerpColor([249,115,22], [239,68,68], (0.2 - ratio) / 0.2);
 }
-
-const CIRCUMFERENCE = 2 * Math.PI * 20; // r=20 in iOS SVG ring
-let countdownInterval = null;
-let totalSeconds = 0;
-let _expiresAt = null;
-
-const pad = (n) => String(n).padStart(2, '0');
 
 function initCountdown() {
   const parseTime = (raw) => new Date(/^\d+$/.test(String(raw)) ? Number(raw) : raw);
   _expiresAt = parseTime(ORDER.expirationTime);
   const remaining = Math.max(0, Math.round((_expiresAt - Date.now()) / 1000));
   if (remaining <= 0) { showExpired(); return; }
-  // 用 createdAt 和 expirationTime 推算总有效时长，否则默认 600 秒
+
   const created = parseTime(ORDER.createdAt);
-  totalSeconds = (!isNaN(created.getTime()) && !isNaN(_expiresAt.getTime()))
+  _totalSeconds = (!isNaN(created) && !isNaN(_expiresAt))
     ? Math.max(1, Math.round((_expiresAt - created) / 1000))
     : 600;
+
   $('ring').style.strokeDasharray = CIRCUMFERENCE;
-  // 让初始渲染就从 remaining-1 开始，避免视觉上停顿一秒
-  _expiresAt = new Date(_expiresAt.getTime() - 1000);
-  tickCountdown();
-  countdownInterval = setInterval(tickCountdown, 1000);
+  _expiresAt = new Date(_expiresAt.getTime() - 1000); // 避免初始渲染停顿
+  _tickCountdown();
+  _countdownInterval = setInterval(_tickCountdown, 1000);
 }
 
-function tickCountdown() {
+function _tickCountdown() {
   const remaining = Math.max(0, Math.round((_expiresAt - Date.now()) / 1000));
   const h = Math.floor(remaining / 3600);
   const m = Math.floor((remaining % 3600) / 60);
   const s = remaining % 60;
+  const timeStr = h > 0 ? `${_pad(h)}:${_pad(m)}:${_pad(s)}` : `${_pad(m)}:${_pad(s)}`;
+  const color   = _ratioColor(_totalSeconds > 0 ? remaining / _totalSeconds : 0);
+  const offset  = CIRCUMFERENCE * (1 - (_totalSeconds > 0 ? remaining / _totalSeconds : 0));
 
-  const timeStr = h > 0
-    ? `${pad(h)}:${pad(m)}:${pad(s)}`
-    : `${pad(m)}:${pad(s)}`;
+  $('countdown').textContent        = timeStr;
+  $('countdown').style.color        = color;
+  $('ring').style.stroke            = color;
+  $('ring').style.strokeDashoffset  = offset;
 
-  $('countdown').textContent = timeStr;
   const inlineEl = $('countdown-inline');
-
-  const color = ratioColor(totalSeconds > 0 ? remaining / totalSeconds : 0);
   if (inlineEl) { inlineEl.textContent = timeStr; inlineEl.style.color = color; }
 
-  $('ring').style.strokeDashoffset = CIRCUMFERENCE * (1 - (totalSeconds > 0 ? remaining / totalSeconds : 0));
-
-  $('countdown').style.color = color;
-  $('ring').style.stroke = color;
-
-  if (remaining <= 0) {
-    clearInterval(countdownInterval);
-    showExpired();
-  }
+  if (remaining <= 0) { clearInterval(_countdownInterval); showExpired(); }
 }
 
-// Polling
-let _pollTimer = null;
+
+// ═══════════════════════════════════════════════════════════════
+//  SECTION 10 — API 轮询
+//  后端对接：修改 CONFIG.api.checkStatus 与 CONFIG.api.statusMap
+// ═══════════════════════════════════════════════════════════════
+
+let _pollTimer   = null;
 let _pollStopped = false;
-let _pollErrors = 0;
-const MAX_POLL_ERRORS = 5;
+let _pollErrors  = 0;
 
 function checkOrderStatus() {
-  if (_pollStopped || !ORDER.tradeId || ORDER.tradeId.startsWith('{{')) return;
+  if (_pollStopped || !ORDER?.tradeId || ORDER.tradeId.startsWith('{{')) return;
 
-  fetch(`/pay/check-status/${encodeURIComponent(ORDER.tradeId)}`, {
+  fetch(CONFIG.api.checkStatus(ORDER.tradeId), {
     headers: { Accept: 'application/json' },
-    signal: AbortSignal.timeout(8000),
+    signal:  AbortSignal.timeout(CONFIG.poll.timeout),
   })
     .then(res => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -472,88 +831,52 @@ function checkOrderStatus() {
     })
     .then(({ data }) => {
       _pollErrors = 0;
-      if (data?.status === 2) onPaymentSuccess();
-      else if (data?.status === 3) showExpired();
-      else scheduleNextPoll();
+      const { paid, expired } = CONFIG.api.statusMap;
+      if (data?.status === paid)         onPaymentSuccess();
+      else if (data?.status === expired) showExpired();
+      else                               _scheduleNextPoll();
     })
     .catch(() => {
-      if (++_pollErrors >= MAX_POLL_ERRORS) showTimeout();
-      else scheduleNextPoll();
+      if (++_pollErrors >= CONFIG.poll.maxErrors) showTimeout();
+      else _scheduleNextPoll();
     });
 }
 
-const scheduleNextPoll = () => {
-  if (!_pollStopped) _pollTimer = setTimeout(checkOrderStatus, 5000);
-};
+function _scheduleNextPoll() {
+  if (!_pollStopped) _pollTimer = setTimeout(checkOrderStatus, CONFIG.poll.interval);
+}
 
 function stopPolling() {
   _pollStopped = true;
   clearTimeout(_pollTimer);
 }
 
-// State panels
-const SCREENS = ['screen-success', 'screen-expired', 'screen-timeout', 'screen-not-found'];
-
-function syncStatusCardHeight() {
-  const card = $('status-card');
-  const inner = card?.querySelector('.status-card-inner');
-  if (!card || !inner) return;
-
-  const activeFace = card.classList.contains('is-flipped')
-    ? card.querySelector('.status-face-back')
-    : card.querySelector('.status-face-front');
-
-  const nextHeight = activeFace?.scrollHeight || 0;
-  if (nextHeight > 0) {
-    card.style.height = `${nextHeight}px`;
-    inner.style.height = `${nextHeight}px`;
-  }
+function retryPolling() {
+  _pollErrors  = 0;
+  _pollStopped = false;
+  hideStatePanel();
+  checkOrderStatus();
 }
 
-function setActiveScreen(state) {
-  SCREENS.forEach(id => $(id).classList.toggle('is-active', id === `screen-${state}`));
-}
 
-function flipToState(state) {
-  setActiveScreen(state);
-  $('status-card').classList.add('is-flipped');
-  requestAnimationFrame(syncStatusCardHeight);
-}
-
-function showStatePanel(state) {
-  $('order-info').style.display = state === 'not-found' ? 'none' : '';
-  flipToState(state);
-}
-
-function goBack() {
-  if (document.referrer) {
-    window.location.href = document.referrer;
-  } else if (ORDER.redirectUrl && !ORDER.redirectUrl.startsWith('{{')) {
-    window.location.href = ORDER.redirectUrl;
-  } else {
-    history.back();
-  }
-}
-
-function hideStatePanel() {
-  $('status-card').classList.remove('is-flipped');
-  $('order-info').style.display = '';
-  requestAnimationFrame(syncStatusCardHeight);
-}
+// ═══════════════════════════════════════════════════════════════
+//  SECTION 11 — 支付状态处理
+// ═══════════════════════════════════════════════════════════════
 
 function onPaymentSuccess() {
   stopPolling();
-  clearInterval(countdownInterval);
+  clearInterval(_countdownInterval);
   showStatePanel('success');
-  if (ORDER.redirectUrl && !ORDER.redirectUrl.startsWith('{{')) {
-    setTimeout(() => { window.location.href = ORDER.redirectUrl; }, 3000);
+  if (ORDER?.redirectUrl && !ORDER.redirectUrl.startsWith('{{')) {
+    setTimeout(() => { window.location.href = ORDER.redirectUrl; }, CONFIG.redirect.delay);
   }
 }
 
 function showExpired() {
   stopPolling();
-  clearInterval(countdownInterval);
-  $('btn-transferred').disabled = true;
+  clearInterval(_countdownInterval);
+  const btn = $('btn-transferred');
+  if (btn) btn.disabled = true;
   showStatePanel('expired');
 }
 
@@ -564,22 +887,86 @@ function showTimeout() {
 
 function showNotFound() {
   stopPolling();
-  clearInterval(countdownInterval);
-  $('btn-transferred').disabled = true;
+  clearInterval(_countdownInterval);
+  const btn = $('btn-transferred');
+  if (btn) btn.disabled = true;
   showStatePanel('not-found');
 }
 
-function retryPolling() {
-  _pollErrors = 0;
+
+// ═══════════════════════════════════════════════════════════════
+//  SECTION 12 — 转账按钮 & 连接钱包
+// ═══════════════════════════════════════════════════════════════
+
+function handleTransfer() {
+  const btn  = $('btn-transferred');
+  if (!btn) return;
+  const span = btn.querySelector('span');
+  if (!span) return;
+  span.textContent = t('verifying');
+  btn.disabled     = true;
+  _pollErrors  = 0;
   _pollStopped = false;
-  hideStatePanel();
+  clearTimeout(_pollTimer);
   checkOrderStatus();
+  setTimeout(() => {
+    span.textContent = t('i_have_transferred');
+    btn.disabled     = false;
+  }, 4000);
 }
+
+function connectWallet() {
+  window.location.href = CONFIG.wallet.deeplink(window.location.href);
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  SECTION 13 — 初始化入口
+// ═══════════════════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
   setLang(detectLang());
-  initOrder();
-  syncStatusCardHeight();
-  window.addEventListener('resize', syncStatusCardHeight);
+
+  if (!ORDER?.tradeId || ORDER.tradeId.startsWith('{{')) {
+    showNotFound();
+    return;
+  }
+
+  // 在 Step 1 阶段就填充订单信息卡片
+  if (ORDER.amount && !ORDER.amount.startsWith('{{')) {
+    renderRow('display-fiat', t('order_amount'), `${ORDER.amount} ${ORDER.currency || ''}`);
+    setText('display-amount', `${ORDER.amount} ${ORDER.currency || ''}`);
+  }
+  renderOrderId();
+
+  // 确保 PAYMENT_OPTIONS 存在（服务端未注入时降级为内置默认选项）
+  if (typeof PAYMENT_OPTIONS === 'undefined' || !Array.isArray(PAYMENT_OPTIONS) || !PAYMENT_OPTIONS.length) {
+    window.PAYMENT_OPTIONS = [
+      { token: 'USDT', network: 'TRON',     actualAmount: ORDER.actualAmount, receiveAddress: ORDER.receiveAddress },
+      { token: 'TRX',  network: 'TRON',     actualAmount: ORDER.actualAmount, receiveAddress: ORDER.receiveAddress },
+      { token: 'USDT', network: 'Solana',   actualAmount: ORDER.actualAmount, receiveAddress: ORDER.receiveAddress },
+      { token: 'USDC', network: 'Solana',   actualAmount: ORDER.actualAmount, receiveAddress: ORDER.receiveAddress },
+      { token: 'USDT', network: 'Ethereum', actualAmount: ORDER.actualAmount, receiveAddress: ORDER.receiveAddress },
+      { token: 'USDC', network: 'Ethereum', actualAmount: ORDER.actualAmount, receiveAddress: ORDER.receiveAddress },
+    ];
+  }
+
+  // isselect=true 时跳过 Step 1，直接进入支付面板
+  const _isSelect = ORDER.is_selected && ORDER.is_selected !== 'false' && !ORDER.is_selected.startsWith('{{');
+  if (_isSelect) {
+    $('step1-panel').style.display = 'none';
+    $('payment-panel').style.display = '';
+    _currentPanel = 'payment';
+    setStepBar(2);
+    initOrder();
+  } else {
+    initStep1();
+    setStepBar(1);
+  }
+
+  // 连接钱包按钮开关
+  const walletBtn = $('btn-connect-wallet');
+  if (walletBtn) walletBtn.style.display = CONFIG.wallet.enabled ? '' : 'none';
 });
+
 

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/btcsuite/btcutil/base58"
+	"github.com/gagliardetto/solana-go"
 )
 
 // isValidEthereumAddress 校验 0x + 20 字节十六进制（主网收款）。
@@ -43,4 +44,14 @@ func isValidTronAddress(addr string) bool {
 	hash2 := sha256.Sum256(hash[:])
 
 	return string(checksum) == string(hash2[:4])
+}
+
+// isValidSolanaAddress 校验 Solana Base58 地址是否合法（32 字节公钥）。
+func isValidSolanaAddress(addr string) bool {
+	addr = strings.TrimSpace(addr)
+	if len(addr) < 32 || len(addr) > 44 {
+		return false
+	}
+	_, err := solana.PublicKeyFromBase58(addr)
+	return err == nil
 }

@@ -8,7 +8,7 @@ const (
 const (
 	NetworkTron     = "tron"
 	NetworkSolana   = "solana"
-	NetworkEthereum = "eth"
+	NetworkEthereum = "ethereum"
 )
 
 type WalletAddress struct {

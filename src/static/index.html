@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,8 +14,8 @@
     @variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
     @theme inline {
-      --font-sans: "Noto Sans SC Variable", "Noto Sans SC", system-ui, sans-serif;
-      --font-nunito: "Nunito Variable", "Noto Sans SC Variable", "Noto Sans SC", system-ui, sans-serif;
+      --font-sans:               "Noto Sans SC Variable", "Noto Sans SC", system-ui, sans-serif;
+      --font-nunito:             "Nunito Variable", "Noto Sans SC Variable", "Noto Sans SC", system-ui, sans-serif;
       --color-background:        var(--background);
       --color-foreground:        var(--foreground);
       --color-card:              var(--card);
@@ -23,249 +24,524 @@
       --color-popover-foreground:var(--popover-foreground);
       --color-primary:           var(--primary);
       --color-primary-foreground:var(--primary-foreground);
-      --color-primary-hover:     var(--primary-hover);
       --color-secondary:         var(--secondary);
+      --color-secondary-foreground:var(--secondary-foreground);
       --color-muted:             var(--muted);
       --color-muted-foreground:  var(--muted-foreground);
       --color-accent:            var(--accent);
       --color-accent-foreground: var(--accent-foreground);
+      --color-destructive:       var(--destructive);
       --color-border:            var(--border);
-      --color-border-hover:      var(--border-hover);
+      --color-input:             var(--input);
+      --color-ring:              var(--ring);
       --color-success:           var(--success);
       --color-warning:           var(--warning);
-      --shadow-card:             var(--card-shadow);
-      --shadow-popover:          var(--popover-shadow);
       --animate-state-in:        state-in .28s cubic-bezier(.34,1.56,.64,1);
+      --radius-sm:  calc(var(--radius) - 4px);
+      --radius-md:  calc(var(--radius) - 2px);
+      --radius-lg:  var(--radius);
+      --radius-xl:  calc(var(--radius) + 4px);
+      --radius-2xl: calc(var(--radius) + 8px);
+    }
+
+    /* ── Design tokens ── */
+    :root, [data-theme="light"] {
+      --background:        oklch(1 0 0);
+      --foreground:        oklch(0.141 0.005 285.823);
+      --card:              oklch(1 0 0);
+      --card-foreground:   oklch(0.141 0.005 285.823);
+      --popover:           oklch(1 0 0);
+      --popover-foreground:oklch(0.141 0.005 285.823);
+      --primary:           oklch(0.21 0.006 285.885);
+      --primary-foreground:oklch(0.985 0 0);
+      --secondary:         oklch(0.967 0.001 286.375);
+      --secondary-foreground:oklch(0.21 0.006 285.885);
+      --muted:             oklch(0.967 0.001 286.375);
+      --muted-foreground:  oklch(0.552 0.016 285.938);
+      --accent:            oklch(0.967 0.001 286.375);
+      --accent-foreground: oklch(0.21 0.006 285.885);
+      --destructive:       oklch(0.577 0.245 27.325);
+      --border:            oklch(0.92 0.004 286.32);
+      --input:             oklch(0.92 0.004 286.32);
+      --ring:              oklch(0.705 0.015 286.067);
+      --radius:             0.875rem;
+      --success:           oklch(0.721 0.193 143.56);
+      --warning:           oklch(0.741 0.188 55.68);
+    }
+    [data-theme="dark"] {
+      --background:        oklch(0.141 0.005 285.823);
+      --foreground:        oklch(0.985 0 0);
+      --card:              oklch(0.21 0.006 285.885);
+      --card-foreground:   oklch(0.985 0 0);
+      --popover:           oklch(0.21 0.006 285.885);
+      --popover-foreground:oklch(0.985 0 0);
+      --primary:           oklch(0.92 0.004 286.32);
+      --primary-foreground:oklch(0.21 0.006 285.885);
+      --secondary:         oklch(0.274 0.006 286.033);
+      --secondary-foreground:oklch(0.985 0 0);
+      --muted:             oklch(0.274 0.006 286.033);
+      --muted-foreground:  oklch(0.705 0.015 286.067);
+      --accent:            oklch(0.274 0.006 286.033);
+      --accent-foreground: oklch(0.985 0 0);
+      --destructive:       oklch(0.704 0.191 22.216);
+      --border:            oklch(1 0 0 / 10%);
+      --input:             oklch(1 0 0 / 15%);
+      --ring:              oklch(0.552 0.016 285.938);
+      --success:           oklch(0.747 0.201 143.5);
+      --warning:           oklch(0.762 0.182 61.47);
+    }
+
+    /* ── Ambient blobs ── */
+    @keyframes shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    @keyframes fill-bar {
+      from { width: 0%; }
+      to   { width: 100%; }
+    }
+
+    @keyframes slide-out-l {
+      from { transform: translateX(0); }
+      to   { transform: translateX(calc(-100% - 20px)); }
+    }
+    @keyframes slide-out-r {
+      from { transform: translateX(0); }
+      to   { transform: translateX(calc(100% + 20px)); }
+    }
+    @keyframes slide-in-r {
+      from { transform: translateX(calc(100% + 20px)); }
+      to   { transform: translateX(0); }
+    }
+    @keyframes slide-in-l {
+      from { transform: translateX(calc(-100% - 20px)); }
+      to   { transform: translateX(0); }
+    }
+
+    @keyframes blob-drift {
+      0%   { transform: translate(0,0) scale(1); }
+      50%  { transform: translate(30px,-20px) scale(1.06); }
+      100% { transform: translate(-20px,30px) scale(0.96); }
+    }
+
+    @layer components {
+      /* Card */
+      .card {
+        @apply bg-card border border-border rounded-2xl shadow-md transition-colors duration-300;
+      }
+
+      /* Chip / pill button */
+      .chip {
+        @apply bg-card border border-border rounded-full px-3.5 py-1.5 text-card-foreground shadow-xs transition-all;
+      }
+      .chip:hover  { @apply bg-accent border-ring; }
+      .chip:active { @apply opacity-60; }
+      .chip.w-9    { @apply p-0; }
+
+      /* Copy rows */
+      .row {
+        @apply flex items-center px-4 py-3.5 transition-colors;
+      }
+      .row:active { @apply bg-muted; }
+
+      /* Icon button */
+      .icon-btn {
+        @apply flex items-center justify-center size-8 rounded-sm text-muted-foreground bg-secondary border border-transparent shrink-0 transition-colors;
+      }
+      .icon-btn:hover { @apply bg-accent text-card-foreground border-border; }
+
+      /* Primary button */
+      .btn-primary {
+        @apply flex items-center justify-center bg-primary text-primary-foreground border border-border rounded-xl px-6 py-3 text-base font-semibold tracking-tight cursor-pointer shadow-md transition-[background,border-color,transform,opacity];
+      }
+      .btn-primary:hover    { @apply bg-primary/90; }
+      .btn-primary:active   { @apply scale-[0.97] opacity-90; }
+      .btn-primary:disabled { @apply opacity-45 cursor-not-allowed scale-100; }
+
+      /* Secondary button */
+      .btn-secondary {
+        @apply inline-flex items-center justify-center bg-card text-card-foreground border border-border rounded-xl px-7 py-3 text-base font-medium cursor-pointer shadow-sm transition-all;
+      }
+      .btn-secondary:hover  { @apply bg-accent border-ring; }
+      .btn-secondary:active { @apply opacity-70; }
+
+      /* State icon circle */
+      .state-icon {
+        @apply size-20 rounded-full flex items-center justify-center mx-auto;
+      }
+
+      /* Dropdown menu */
+      .menu {
+        @apply bg-popover border border-border rounded-xl shadow-xl overflow-hidden;
+        opacity: 0;
+        transform: translateY(-8px);
+        pointer-events: none;
+        transition: opacity 0.2s, transform 0.2s;
+      }
+      .menu--up       { transform: translateY(8px); }
+      .menu.is-open   { opacity: 1; transform: translateY(0); pointer-events: all; }
+      .menu-item {
+        @apply flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-card-foreground cursor-pointer transition-colors;
+      }
+      .menu-item:hover        { @apply bg-accent; }
+      .menu-item.is-selected  { @apply text-primary font-semibold; }
+      .menu-item + .menu-item { @apply border-t border-border; }
+      .select-trigger.is-open            { opacity: 0.8; }
+      .select-trigger.is-open .select-chevron { transform: rotate(180deg); }
+
+      /* QR wrapper */
+      .qr-wrapper {
+        @apply bg-white rounded-xl p-3.5 border border-border shadow-md inline-block;
+      }
+
+      /* Timer SVG rings */
+      .timer-ring-track    { stroke: var(--border); transition: stroke .3s; }
+      .timer-ring-progress { transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset 1s linear, stroke .5s; }
+      .timer-icon          { @apply text-muted-foreground; }
+
+      /* Flippable status card */
+      .status-card {
+        position: relative;
+        perspective: 1600px;
+        transition: height 0.38s cubic-bezier(.22,1,.36,1);
+      }
+      .status-card-inner {
+        position: relative; width: 100%;
+        transform-style: preserve-3d;
+        transition: transform 0.82s cubic-bezier(.22,.9,.24,1);
+      }
+      .status-card.is-flipped .status-card-inner { transform: rotateY(180deg); }
+      .status-face {
+        @apply absolute inset-0 w-full;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        transform-style: preserve-3d;
+      }
+      .status-face-front      { z-index: 2; }
+      .status-face-back       { transform: rotateY(180deg); }
+      .state-panel-shell      { @apply pt-px; }
+      .state-screen           { @apply hidden; }
+      .state-screen.is-active { @apply flex; }
+    }
+
+    /* ── Panel viewport: hide scrollbars ── */
+    #panel-viewport { scrollbar-width: none; }
+    #panel-viewport::-webkit-scrollbar { display: none; }
+
+    /* ── Toast ── */
+    #toast {
+      @apply fixed left-1/2 bottom-9 text-sm font-medium px-5 py-2.5 rounded-xl border border-border shadow-xl opacity-0 pointer-events-none whitespace-nowrap z-9999;
+      @apply bg-foreground/95 text-background;
+      @apply dark:bg-card/95 dark:text-card-foreground;
+      transform: translateX(-50%) translateY(12px);
+      transition: opacity 0.22s, transform 0.22s;
+    }
+
+    @keyframes state-in {
+      from { opacity: 0; transform: translateY(12px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+    ::view-transition-old(root) { z-index: 1; }
+    ::view-transition-new(root) { z-index: 9; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .status-card, .status-card-inner, .status-face, .timer-ring-progress {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+      }
     }
   </style>
-  <link rel="stylesheet" href="/static/payment.css" />
   <script defer src="https://cdn.jsdmirror.com/npm/lucide@latest/dist/umd/lucide.min.js"></script>
   <script defer src="https://cdn.jsdmirror.com/npm/qrcodejs@latest/qrcode.min.js"></script>
   <script defer src="https://cdn.jsdmirror.com/npm/clipboard@latest/dist/clipboard.min.js"></script>
 </head>
-<body class="bg-background text-foreground min-h-screen flex flex-col items-center justify-center font-sans transition-colors duration-300">
 
-<!-- Ambient background blobs -->
-<div class="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-  <div class="blob blob-1"></div>
-  <div class="blob blob-2"></div>
-  <div class="blob blob-3"></div>
-</div>
-
-<div class="flex flex-col items-center w-full max-w-[400px] px-4 py-8 relative z-10">
-
+<body
+  class="bg-background text-foreground min-h-screen flex flex-col items-center font-sans transition-colors duration-300">
   <!-- Nav bar -->
-  <div class="w-full flex items-center justify-between mb-6">
+  <header class="w-full max-w-sm px-4 pt-8 pb-6 flex items-center justify-between relative z-10">
     <div class="flex items-center gap-2">
-      <img src="https://www.gmwallet.app/favicon.png" alt="logo" class="h-8 w-8 rounded-[10px] shadow-sm" />
-      <span class="text-[17px] font-semibold tracking-[-0.3px] text-card-foreground">GM Pay</span>
+      <img src="https://www.gmwallet.app/favicon.png" alt="logo" class="h-8 w-8 rounded-sm shadow-sm" />
+      <span class="text-lg font-semibold tracking-tight text-card-foreground">GM Pay</span>
     </div>
     <div class="flex items-center gap-2">
       <!-- Language pill -->
       <div class="select-wrap relative select-none" id="dd-lang">
-        <div class="select-trigger ios-pill flex items-center gap-1.5 cursor-pointer" onclick="toggleSelect('dd-lang')">
-          <span class="text-[13px] font-medium" id="lang-label">EN</span>
-          <i data-lucide="chevron-down" class="select-chevron text-muted-foreground shrink-0 transition-transform duration-200" width="11" height="11" stroke-width="2.5"></i>
+        <div class="select-trigger chip flex items-center gap-1.5 cursor-pointer" onclick="toggleSelect('dd-lang')">
+          <span class="text-sm font-medium" id="lang-label">EN</span>
+          <i data-lucide="chevron-down"
+            class="select-chevron text-muted-foreground shrink-0 transition-transform duration-200" width="11"
+            height="11" stroke-width="2.5"></i>
         </div>
-        <div class="select-menu ios-menu absolute z-100 top-[calc(100%+12px)] right-0 min-w-[160px] overflow-hidden opacity-0 -translate-y-2 pointer-events-none transition-all duration-200" id="dd-lang-menu">
-          <div class="select-option ios-menu-item is-selected" data-lang="en" onclick="setLang('en')">🇺🇸&nbsp; English</div>
-          <div class="select-option ios-menu-item" data-lang="zh" onclick="setLang('zh')">🇨🇳&nbsp; 中文</div>
-          <div class="select-option ios-menu-item" data-lang="ja" onclick="setLang('ja')">🇯🇵&nbsp; 日本語</div>
-          <div class="select-option ios-menu-item" data-lang="ko" onclick="setLang('ko')">🇰🇷&nbsp; 한국어</div>
-          <div class="select-option ios-menu-item" data-lang="zh-hk" onclick="setLang('zh-hk')">🇭🇰&nbsp; 繁體中文</div>
-          <div class="select-option ios-menu-item" data-lang="ru" onclick="setLang('ru')">🇷🇺&nbsp; Русский</div>
+        <div class="select-menu menu absolute z-100 top-[calc(100%+12px)] right-0 min-w-40" id="dd-lang-menu">
+          <div class="select-option menu-item is-selected" data-lang="en" onclick="setLang('en')">🇺🇸&nbsp; English
+          </div>
+          <div class="select-option menu-item" data-lang="zh" onclick="setLang('zh')">🇨🇳&nbsp; 中文</div>
+          <div class="select-option menu-item" data-lang="ja" onclick="setLang('ja')">🇯🇵&nbsp; 日本語</div>
+          <div class="select-option menu-item" data-lang="ko" onclick="setLang('ko')">🇰🇷&nbsp; 한국어</div>
+          <div class="select-option menu-item" data-lang="zh-hk" onclick="setLang('zh-hk')">🇭🇰&nbsp; 繁體中文</div>
+          <div class="select-option menu-item" data-lang="ru" onclick="setLang('ru')">🇷🇺&nbsp; Русский</div>
         </div>
       </div>
       <!-- Theme toggle -->
-      <button class="ios-pill w-9 h-9 flex items-center justify-center cursor-pointer" onclick="toggleTheme(event)" title="Toggle theme">
+      <button class="chip w-9 h-9 flex items-center justify-center cursor-pointer" onclick="toggleTheme(event)"
+        title="Toggle theme">
         <i data-lucide="moon" id="icon-moon" class="hidden" width="16" height="16" stroke-width="1.8"></i>
         <i data-lucide="sun" id="icon-sun" width="16" height="16" stroke-width="1.8"></i>
       </button>
-    </div>
-  </div>
-
-  <!-- Hero amount card -->
-  <div id="order-info" class="glass-card w-full px-6 pt-6 pb-5 mb-3">
-    <p class="text-[13px] font-medium text-muted-foreground mb-1" data-i18n="amount_to_pay">Amount to pay</p>
-    <div class="flex items-end gap-3 justify-between">
-      <span class="text-[42px] font-bold leading-none tracking-[-0.04em] text-card-foreground font-nunito" id="display-amount">--</span>
-      <button class="ios-icon-btn mb-0.5 shrink-0" id="btn-copy-amount" title="Copy">
-        <i data-lucide="copy" width="15" height="15" stroke-width="2"></i>
-      </button>
-    </div>
-    <div class="flex items-center gap-1.5 mt-1.5" id="display-network">--</div>
-    <div class="mt-3 pt-3 border-t border-border/50">
-      <table class="w-full text-[13px] text-muted-foreground border-separate border-spacing-y-1">
-        <tbody>
-          <tr id="display-fiat"></tr>
-          <tr id="display-order-id"></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Flippable payment/state card -->
-  <div id="status-card" class="status-card w-full">
-    <div class="status-card-inner">
-      <div class="status-face status-face-front">
-        <div id="payment-panel" class="w-full">
-
-          <!-- QR section -->
-          <div class="glass-card w-full px-5 py-5 mb-3">
-            <!-- Scan title + small ring -->
-            <div class="flex items-center justify-between mb-3">
-              <p class="text-[13px] font-semibold text-card-foreground" data-i18n="scan_title">Scan or copy address to pay</p>
-              <div id="timer-row" class="relative w-10 h-10 shrink-0">
-                <svg class="w-10 h-10 absolute inset-0" viewBox="0 0 48 48">
-                  <circle class="timer-ring-track" cx="24" cy="24" r="20" fill="none" stroke-width="3"/>
-                  <circle id="ring-track" class="timer-ring-track" cx="24" cy="24" r="20" fill="none" stroke-width="3"/>
-                  <circle id="ring" class="timer-ring-progress" cx="24" cy="24" r="20" fill="none" stroke="#34c759" stroke-width="3"
-                    stroke-linecap="round"
-                    stroke-dasharray="125.66" stroke-dashoffset="0"/>
-                </svg>
-                <div class="absolute inset-0 flex items-center justify-center">
-                  <i data-lucide="timer" class="timer-icon" width="18" height="18" stroke-width="1.8"></i>
-                </div>
-              </div>
-            </div>
-            <!-- Big countdown above QR -->
-            <p class="text-[32px] font-bold font-mono leading-none text-success text-center mb-4" id="countdown">--:--</p>
-            <div class="flex justify-center">
-              <div class="qr-wrapper">
-                <div id="qrcode" class="w-44 h-44"></div>
-              </div>
-            </div>
-          </div>
-          <!-- hidden inline countdown (used by JS, not shown) -->
-          <span id="countdown-inline" class="sr-only"></span>
-
-          <!-- Copy rows -->
-          <div class="glass-card w-full overflow-hidden mb-3">
-            <!-- Amount row -->
-            <div id="copy-amt-box" class="ios-row cursor-pointer select-none">
-              <div class="flex-1 min-w-0">
-                <p class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5" data-i18n="amount_to_pay">Amount to pay</p>
-                <p class="text-[15px] font-semibold text-card-foreground" id="field-amount">--</p>
-              </div>
-              <span class="ios-icon-btn shrink-0 pointer-events-none" id="btn-copy-amt2">
-                <i data-lucide="copy" width="14" height="14" stroke-width="2"></i>
-              </span>
-            </div>
-            <!-- Divider -->
-            <div class="h-px bg-border/50 mx-4"></div>
-            <!-- Address row -->
-            <div id="copy-addr-box" class="ios-row cursor-pointer select-none">
-              <div class="flex-1 min-w-0 pr-3">
-                <p class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5" data-i18n="payment_address">Payment address</p>
-                <p class="text-[13px] font-medium text-card-foreground break-all leading-relaxed" id="field-address">--</p>
-              </div>
-              <span class="ios-icon-btn shrink-0 pointer-events-none self-start mt-0.5" id="btn-copy-addr">
-                <i data-lucide="copy" width="14" height="14" stroke-width="2"></i>
-              </span>
-            </div>
-          </div>
-
-          <!-- CTA -->
-          <button class="ios-btn-primary w-full mb-3" id="btn-transferred" onclick="handleTransfer()">
-            <span data-i18n="i_have_transferred">I have transferred</span>
-          </button>
-
-          <!-- Status -->
-          <div class="flex items-center justify-center gap-1.5 py-1" id="status-row">
-            <i data-lucide="loader-circle" class="animate-spin text-muted-foreground" width="13" height="13" stroke-width="2.2"></i>
-            <span class="text-[12px] text-muted-foreground" id="status-text" data-i18n="checking_blockchain">Checking blockchain</span>
-          </div>
-
+      <!-- Ambient background blobs -->
+      <div class="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+        <div
+          class="absolute rounded-full blur-[80px] animate-[blob-drift_18s_ease-in-out_infinite_alternate] size-[420px] -top-30 -left-25 bg-[color-mix(in_srgb,var(--muted)_60%,transparent)]">
         </div>
-      </div>
-
-      <div class="status-face status-face-back">
-        <div id="state-panel" class="w-full state-panel-shell">
-          <div class="glass-card w-full flex items-center justify-center min-h-[300px] py-10 px-6">
-
-            <!-- Success -->
-            <div class="animate-state-in state-screen flex flex-col items-center text-center" id="screen-success">
-              <div class="ios-state-icon bg-[rgba(52,199,89,.15)] mb-6">
-                <i data-lucide="check" width="38" height="38" stroke-width="2.2" stroke="#34c759"></i>
-              </div>
-              <p class="text-[20px] font-bold text-card-foreground mb-2" data-i18n="payment_success">Payment Successful</p>
-              <p class="text-[14px] text-muted-foreground mb-6" data-i18n="redirecting">Redirecting…</p>
-              <i data-lucide="loader-circle" class="animate-spin text-muted-foreground" width="22" height="22" stroke-width="2"></i>
-            </div>
-
-            <!-- Expired -->
-            <div class="animate-state-in state-screen flex flex-col items-center text-center" id="screen-expired">
-              <div class="ios-state-icon bg-[rgba(255,59,48,.12)] mb-6">
-                <i data-lucide="x" width="38" height="38" stroke-width="2.2" stroke="#ff3b30"></i>
-              </div>
-              <p class="text-[20px] font-bold text-card-foreground mb-2" data-i18n="payment_expired">Payment Expired</p>
-              <p class="text-[14px] text-muted-foreground mb-7" data-i18n="expired_sub">Please initiate a new payment</p>
-              <button class="ios-btn-secondary" onclick="goBack()" data-i18n="back">Back</button>
-            </div>
-
-            <!-- Timeout -->
-            <div class="animate-state-in state-screen flex flex-col items-center text-center" id="screen-timeout">
-              <div class="ios-state-icon bg-[rgba(255,149,0,.12)] mb-6">
-                <i data-lucide="triangle-alert" width="38" height="38" stroke-width="2.2" stroke="#ff9500"></i>
-              </div>
-              <p class="text-[20px] font-bold text-card-foreground mb-2" data-i18n="network_timeout">Connection Timeout</p>
-              <p class="text-[14px] text-muted-foreground mb-7" data-i18n="timeout_sub">Unable to connect to the payment server</p>
-              <div class="flex gap-3">
-                <button class="ios-btn-secondary" onclick="goBack()" data-i18n="back">Back</button>
-                <button class="ios-btn-primary px-7" onclick="retryPolling()" data-i18n="retry">Retry</button>
-              </div>
-            </div>
-
-            <!-- Not Found -->
-            <div class="animate-state-in state-screen flex flex-col items-center text-center" id="screen-not-found">
-              <div class="ios-state-icon bg-[rgba(142,142,147,.12)] mb-6">
-                <i data-lucide="file-x" width="38" height="38" stroke-width="2" stroke="#8e8e93"></i>
-              </div>
-              <p class="text-[20px] font-bold text-card-foreground mb-2" data-i18n="order_not_found">Order Not Found</p>
-              <p class="text-[14px] text-muted-foreground" data-i18n="not_found_sub">The order does not exist or has already expired</p>
-            </div>
-
-          </div>
+        <div
+          class="absolute rounded-full blur-[80px] animate-[blob-drift_18s_ease-in-out_infinite_alternate] [animation-delay:-6s] size-[340px] -bottom-20 -right-15 bg-[color-mix(in_srgb,var(--success)_14%,transparent)]">
+        </div>
+        <div
+          class="absolute rounded-full blur-[80px] animate-[blob-drift_18s_ease-in-out_infinite_alternate] [animation-delay:-12s] size-[260px] top-[45%] left-[55%] bg-[color-mix(in_srgb,var(--warning)_10%,transparent)]">
         </div>
       </div>
     </div>
-  </div>
+  </header>
+
+  <main class="flex-1 flex flex-col items-center justify-center w-full max-w-sm px-5 relative">
+
+    <!-- Steps -->
+    <div id="step-progress" class="flex items-center gap-2 w-full mb-4 select-none">
+      <div id="step-bar-1" class="h-1 flex-1 rounded-full overflow-hidden"
+        style="background:color-mix(in srgb,var(--foreground) 10%,transparent)">
+        <div id="step-fill-1" class="h-full rounded-full" style="width:0%;background:var(--foreground)"></div>
+      </div>
+      <div id="step-bar-2" class="h-1 flex-1 rounded-full overflow-hidden"
+        style="background:color-mix(in srgb,var(--foreground) 10%,transparent)">
+        <div id="step-fill-2" class="h-full rounded-full" style="width:0%;background:var(--foreground)"></div>
+      </div>
+    </div>
+
+    <!-- Order info -->
+    <aside id="order-info" class="card w-full px-6 pt-6 pb-5 mb-4">
+      <p class="text-sm font-medium text-muted-foreground mb-1" data-i18n="amount_to_pay">Amount to pay</p>
+      <div class="flex items-end gap-3 justify-between">
+        <span class="text-4xl font-bold leading-none tracking-tighter text-card-foreground font-nunito"
+          id="display-amount">--</span>
+        <button class="icon-btn mb-0.5 shrink-0" id="btn-copy-amount" title="Copy">
+          <i data-lucide="copy" width="15" height="15" stroke-width="2"></i>
+        </button>
+      </div>
+      <div class="flex items-center gap-1.5 mt-1.5" id="display-network">--</div>
+      <div class="mt-3 pt-3 border-t border-border/50">
+        <table class="w-full text-sm text-muted-foreground border-separate border-spacing-y-1">
+          <tbody>
+            <tr id="display-fiat"></tr>
+            <tr id="display-order-id"></tr>
+          </tbody>
+        </table>
+      </div>
+    </aside>
+
+    <!-- Panel viewport: clips horizontal slide -->
+    <div class="relative w-full" id="panel-viewport">
+
+      <!-- Step 1: Select coin + network -->
+      <section id="step1-panel" class="w-full mb-4 pb-4">
+        <div class="flex gap-2 mb-4">
+          <!-- Network -->
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5"
+              data-i18n="network_label">Network</p>
+            <div class="select-wrap relative select-none" id="dd-network">
+              <div
+                class="select-trigger flex items-center justify-between bg-card border border-border rounded-xl px-3.5 py-3 cursor-pointer gap-2 shadow-sm transition-colors h-[50px]"
+                onclick="toggleSelect('dd-network')">
+                <span id="network-label" class="text-sm font-semibold text-card-foreground leading-none"></span>
+                <i data-lucide="chevron-down"
+                  class="select-chevron text-muted-foreground shrink-0 transition-transform duration-200" width="13"
+                  height="13" stroke-width="2.5"></i>
+              </div>
+              <div class="select-menu menu absolute z-100 top-[calc(100%+8px)] left-0 w-full" id="dd-network-menu">
+              </div>
+            </div>
+          </div>
+          <!-- Currency -->
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5"
+              data-i18n="currency_label">Currency</p>
+            <div class="select-wrap relative select-none" id="dd-token">
+              <div
+                class="select-trigger flex items-center justify-between bg-card border border-border rounded-xl px-3.5 py-3 cursor-pointer gap-2 shadow-sm transition-colors h-[50px]"
+                onclick="toggleSelect('dd-token')">
+                <span id="token-label" class="text-sm font-semibold text-card-foreground"></span>
+                <i data-lucide="chevron-down"
+                  class="select-chevron text-muted-foreground shrink-0 transition-transform duration-200" width="13"
+                  height="13" stroke-width="2.5"></i>
+              </div>
+              <div class="select-menu menu absolute z-100 top-[calc(100%+8px)] left-0 w-full" id="dd-token-menu">
+              </div>
+            </div>
+          </div>
+        </div>
+        <button id="btn-confirm-step1" class="btn-primary w-full" onclick="confirmStep1()"
+          data-i18n="confirm">Confirm</button>
+      </section>
+
+      <!-- Payment panel (Step 2) -->
+      <section id="payment-panel" class="w-full pb-4" style="display:none">
+        <!-- QR + address card -->
+        <div class="card w-full px-5 pt-5 pb-0 mb-4 overflow-hidden">
+          <!-- Scan title + timer -->
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-sm font-semibold text-card-foreground" data-i18n="scan_title">Scan or copy address to pay
+            </p>
+            <div id="timer-row" class="relative w-10 h-10 shrink-0">
+              <svg class="w-10 h-10 absolute inset-0" viewBox="0 0 48 48">
+                <circle class="timer-ring-track" cx="24" cy="24" r="20" fill="none" stroke-width="3" />
+                <circle id="ring-track" class="timer-ring-track" cx="24" cy="24" r="20" fill="none" stroke-width="3" />
+                <circle id="ring" class="timer-ring-progress" cx="24" cy="24" r="20" fill="none" stroke="var(--success)"
+                  stroke-width="3" stroke-linecap="round" stroke-dasharray="125.66" stroke-dashoffset="0" />
+              </svg>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <i data-lucide="timer" class="timer-icon" width="18" height="18" stroke-width="1.8"></i>
+              </div>
+            </div>
+          </div>
+          <!-- Countdown -->
+          <p class="text-3xl font-bold font-mono leading-none text-success text-center mb-4" id="countdown">--:--</p>
+          <!-- QR code -->
+          <div class="flex justify-center mb-4">
+            <div class="qr-wrapper">
+              <div id="qrcode" class="w-44 h-44"></div>
+            </div>
+          </div>
+          <!-- Address row (edge-to-edge inside card) -->
+          <div class="h-px bg-border/50 -mx-5"></div>
+          <div id="copy-addr-box" class="row cursor-pointer select-none -mx-5">
+            <div class="flex-1 min-w-0 pr-3">
+              <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5"
+                data-i18n="payment_address">Payment address</p>
+              <p class="text-sm font-medium text-card-foreground break-all leading-relaxed" id="field-address">--</p>
+            </div>
+            <span class="icon-btn shrink-0 pointer-events-none self-start mt-0.5" id="btn-copy-addr">
+              <i data-lucide="copy" width="14" height="14" stroke-width="2"></i>
+            </span>
+          </div>
+        </div>
+        <span id="countdown-inline" class="sr-only"></span>
+        <!-- Connect Wallet (above I have transferred) -->
+        <button class="btn-secondary w-full mb-3" id="btn-connect-wallet" onclick="connectWallet()">
+          <i data-lucide="wallet" width="16" height="16" stroke-width="1.8" class="mr-1.5 shrink-0"></i>
+          <span data-i18n="connect_wallet">Connect Wallet to Pay</span>
+        </button>
+        <!-- I have transferred -->
+        <button class="btn-primary w-full mb-3" id="btn-transferred" onclick="handleTransfer()">
+          <span data-i18n="i_have_transferred">I have transferred</span>
+        </button>
+        <!-- Status -->
+        <div class="flex items-center justify-center gap-1.5 py-1" id="status-row">
+          <i data-lucide="loader-circle" class="animate-spin text-muted-foreground" width="13" height="13"
+            stroke-width="2.2"></i>
+          <span class="text-xs text-muted-foreground" id="status-text" data-i18n="checking_blockchain">Checking
+            blockchain</span>
+        </div>
+      </section>
+
+      <!-- State: Success -->
+      <section id="screen-success"
+        class="card w-full flex flex-col items-center justify-center text-center py-10 px-6 min-h-96 mb-4" role="status"
+        aria-live="polite" style="display:none">
+        <div class="state-icon bg-success/15 mb-6">
+          <i data-lucide="check" width="38" height="38" stroke-width="2.2" stroke="var(--success)"></i>
+        </div>
+        <p class="text-xl font-bold text-card-foreground mb-2" data-i18n="payment_success">Payment Successful</p>
+        <p class="text-sm text-muted-foreground mb-6" data-i18n="redirecting">Redirecting…</p>
+        <i data-lucide="loader-circle" class="animate-spin text-muted-foreground" width="22" height="22"
+          stroke-width="2"></i>
+      </section>
+
+      <!-- State: Expired -->
+      <section id="screen-expired" class="w-full pb-4" role="status" aria-live="polite" style="display:none">
+        <div class="card w-full flex flex-col items-center justify-center text-center py-10 px-6 mb-4">
+          <div class="state-icon bg-destructive/12 mb-6">
+            <i data-lucide="x" width="38" height="38" stroke-width="2.2" stroke="var(--destructive)"></i>
+          </div>
+          <p class="text-xl font-bold text-card-foreground mb-2" data-i18n="payment_expired">Payment Expired</p>
+          <p class="text-sm text-muted-foreground" data-i18n="expired_sub">Please initiate a new payment</p>
+        </div>
+        <button class="btn-secondary w-full" onclick="goBack()" data-i18n="back">Back</button>
+      </section>
+
+      <!-- State: Timeout -->
+      <section id="screen-timeout" class="w-full pb-4" role="status" aria-live="polite" style="display:none">
+        <div class="card w-full flex flex-col items-center justify-center text-center py-10 px-6 mb-4">
+          <div class="state-icon bg-warning/12 mb-6">
+            <i data-lucide="triangle-alert" width="38" height="38" stroke-width="2.2" stroke="var(--warning)"></i>
+          </div>
+          <p class="text-xl font-bold text-card-foreground mb-2" data-i18n="network_timeout">Connection Timeout</p>
+          <p class="text-sm text-muted-foreground" data-i18n="timeout_sub">Unable to connect to the payment server</p>
+        </div>
+        <div class="flex gap-3">
+          <button class="btn-secondary flex-1" onclick="goBack()" data-i18n="back">Back</button>
+          <button class="btn-primary flex-1" onclick="retryPolling()" data-i18n="retry">Retry</button>
+        </div>
+      </section>
+
+      <!-- State: Not Found -->
+      <section id="screen-not-found"
+        class="card w-full flex flex-col items-center justify-center text-center py-10 px-6 min-h-96 mb-4" role="status"
+        aria-live="polite" style="display:none">
+        <div class="state-icon bg-muted-foreground/12 mb-6">
+          <i data-lucide="file-x" width="38" height="38" stroke-width="2" stroke="var(--muted-foreground)"></i>
+        </div>
+        <p class="text-xl font-bold text-card-foreground mb-2" data-i18n="order_not_found">Order Not Found</p>
+        <p class="text-sm text-muted-foreground" data-i18n="not_found_sub">The order does not exist or has already
+          expired
+        </p>
+      </section>
+
+    </div><!-- /panel viewport -->
+
+  </main>
 
   <!-- Footer -->
-  <footer class="flex items-center justify-center gap-2.5 mt-6 text-[12px] text-muted-foreground select-none">
+  <footer class="flex items-center justify-center gap-2.5 pb-6 text-xs text-muted-foreground select-none relative z-10">
     <span class="flex items-center gap-1.5">
       Powered by
-      <a href="https://www.gmwallet.app" target="_blank" rel="noopener" class="flex items-center gap-1 font-semibold text-card-foreground hover:opacity-70 transition-opacity">
-        <img src="https://www.gmwallet.app/favicon.png" alt="GM Wallet" class="h-3.5 w-3.5 rounded-[3px]" />
+      <a href="https://www.gmwallet.app" target="_blank" rel="noopener"
+        class="flex items-center gap-1 font-semibold text-card-foreground hover:opacity-70 transition-opacity">
+        <img src="https://www.gmwallet.app/favicon.png" alt="GM Wallet" class="h-3.5 w-3.5 rounded-xs" />
         GM Wallet
       </a>
     </span>
     <span class="opacity-30">|</span>
-    <a href="https://github.com/GMwalletApp/epusdt" target="_blank" rel="noopener" class="flex items-center gap-1 hover:opacity-70 transition-opacity">
+    <a href="https://github.com/GMwalletApp" target="_blank" rel="noopener"
+      class="flex items-center gap-1 hover:opacity-70 transition-opacity">
       Open source on <span class="font-semibold text-card-foreground">GitHub</span>
     </a>
   </footer>
 
-</div>
+  <!-- Toast -->
+  <div id="toast">Copied</div>
 
-<!-- Toast -->
-<div id="toast">Copied</div>
-
-<!-- Order data injected by server (Go template) -->
-<script>
-  var ORDER = {
-    tradeId:        "{{.TradeId}}",
-    amount:         "{{.Amount}}",
-    actualAmount:   "{{.ActualAmount}}",
-    token:          "{{.Token}}",
-    currency:       "{{.Currency}}",
-    network:        "{{.Network}}",
-    receiveAddress: "{{.ReceiveAddress}}",
-    expirationTime: "{{.ExpirationTime}}",
-    redirectUrl:    "{{.RedirectUrl}}",
-    createdAt:      "{{.CreatedAt}}"
-  };
-</script>
-<script defer src="/static/payment.js"></script>
+  <!-- Order data injected by server (Go template) -->
+  <script>
+    var ORDER = {
+      tradeId: "{{.TradeId}}",
+      amount: "{{.Amount}}",
+      actualAmount: "{{.ActualAmount}}",
+      token: "{{.Token}}",
+      currency: "{{.Currency}}",
+      network: "{{.Network}}",
+      receiveAddress: "{{.ReceiveAddress}}",
+      expirationTime: "{{.ExpirationTime}}",
+      redirectUrl: "{{.RedirectUrl}}",
+      createdAt: "{{.CreatedAt}}",
+      is_selected: "{{.IsSelected}}"
+    };
+    var PAYMENT_OPTIONS = null;
+  </script>
+  <script defer src="/static/payment.js"></script>
 </body>
+
 </html>

@@ -13,6 +13,9 @@ var Errno = map[int]string{
 	10008: "order does not exist",
 	10009: "failed to parse request params",
 	10010: "order status already changed",
+	10011: "exceeded maximum sub-order limit",
+	10012: "cannot switch network on a sub-order",
+	10013: "order is not awaiting payment",
 }
 
 var (
@@ -28,6 +31,9 @@ var (
 	OrderNotExists             = Err(10008)
 	ParamsMarshalErr           = Err(10009)
 	OrderStatusConflict        = Err(10010)
+	SubOrderLimitExceeded      = Err(10011)
+	CannotSwitchSubOrder       = Err(10012)
+	OrderNotWaitPay            = Err(10013)
 )
 
 type RspError struct {

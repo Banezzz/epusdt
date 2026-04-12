@@ -26,6 +26,7 @@ func RegisterRoute(e *echo.Echo) {
 	payRoute := e.Group("/pay")
 	payRoute.GET("/checkout-counter/:trade_id", comm.Ctrl.CheckoutCounter)
 	payRoute.GET("/check-status/:trade_id", comm.Ctrl.CheckStatus)
+	payRoute.POST("/switch-network", comm.Ctrl.SwitchNetwork)
 
 	// payment routes
 	paymentRoute := e.Group("/payments")

@@ -11,6 +11,7 @@ type CheckoutCounterResponse struct {
 	ExpirationTime int64   `json:"expiration_time"` // 过期时间 时间戳
 	RedirectUrl    string  `json:"redirect_url"`
 	CreatedAt      int64   `json:"created_at"` // 订单创建时间 时间戳
+	IsSelected     bool    `json:"is_selected"`
 }
 
 type CheckStatusResponse struct {

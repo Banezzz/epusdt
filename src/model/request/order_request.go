@@ -38,3 +38,18 @@ type OrderProcessingRequest struct {
 	TradeId            string
 	BlockTransactionId string
 }
+
+// SwitchNetworkRequest 切换支付网络
+type SwitchNetworkRequest struct {
+	TradeId string `json:"trade_id" validate:"required"`
+	Token   string `json:"token" validate:"required"`
+	Network string `json:"network" validate:"required"`
+}
+
+func (r SwitchNetworkRequest) Translates() map[string]string {
+	return validate.MS{
+		"TradeId": "订单号",
+		"Token":   "币种",
+		"Network": "网络",
+	}
+}

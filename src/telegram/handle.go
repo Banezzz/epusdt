@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	ReplayAddWallet         = "请发给我 TRON（T 开头）或以太坊主网（0x 开头）收款地址"
+	ReplayAddWallet         = "请发给我 TRON（T 开头）、以太坊主网（0x 开头）或 Solana 收款地址"
 	pendingWalletAddressTTL = 5 * time.Minute
 )
 
@@ -53,8 +53,10 @@ func OnTextMessageHandle(c tb.Context) error {
 		_, err = data.AddWalletAddress(msgText)
 	case isValidEthereumAddress(msgText):
 		_, err = data.AddWalletAddressWithNetwork(mdb.NetworkEthereum, strings.ToLower(msgText))
+	case isValidSolanaAddress(msgText):
+		_, err = data.AddWalletAddressWithNetwork(mdb.NetworkSolana, msgText)
 	default:
-		_ = c.Send(fmt.Sprintf("钱包 [%s] 添加失败：不是合法的 TRON 或以太坊地址", msgText))
+		_ = c.Send(fmt.Sprintf("钱包 [%s] 添加失败：不是合法的 TRON、以太坊或 Solana 地址", msgText))
 		return nil
 	}
 	if err != nil {
