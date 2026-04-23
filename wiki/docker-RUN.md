@@ -83,7 +83,7 @@ EOF
 cat <<EOF > docker-compose.yaml
 services:
   epusdt:
-    image: gmwallet/epusdt:alpine
+    image: gmwallet/epusdt:latest
     restart: always
     build:
       context: .
