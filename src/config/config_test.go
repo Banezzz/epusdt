@@ -297,6 +297,27 @@ func TestGetUsdtRateUsesAPIWhenAdminOverrideIsNotPositive(t *testing.T) {
 	}
 }
 
+func TestGetRateForCoinUsesUSDPeggedStablecoinFallbacks(t *testing.T) {
+	viper.Reset()
+	t.Cleanup(viper.Reset)
+	t.Setenv("API_RATE_URL", "")
+
+	installSettingsGetter(t, map[string]string{
+		"rate.forced_usdt_rate": "7.0",
+		"rate.api_url":          "",
+	})
+
+	if got := GetRateForCoin("usdc", "usd"); got != 1 {
+		t.Fatalf("GetRateForCoin(usdc, usd) = %v, want 1", got)
+	}
+	if got := GetRateForCoin("USDC.e", "USD"); got != 1 {
+		t.Fatalf("GetRateForCoin(USDC.e, USD) = %v, want 1", got)
+	}
+	if got := GetRateForCoin("usdc", "cny"); math.Abs(got-(1.0/7.0)) > 1e-9 {
+		t.Fatalf("GetRateForCoin(usdc, cny) = %v, want %v", got, 1.0/7.0)
+	}
+}
+
 func TestGetUsdtRateReturnsZeroWhenAPIUnavailableWithoutAdminOverride(t *testing.T) {
 	viper.Reset()
 	t.Cleanup(viper.Reset)

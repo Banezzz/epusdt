@@ -439,7 +439,7 @@ func GetRateForCoin(coin string, base string) float64 {
 	if coin == base {
 		return 1
 	}
-	if coin == "usdt" {
+	if isUSDPeggedCoin(coin) {
 		switch base {
 		case "usd":
 			return 1
@@ -452,6 +452,15 @@ func GetRateForCoin(coin string, base string) float64 {
 		}
 	}
 	return getRateForCoinFromAPI(coin, base)
+}
+
+func isUSDPeggedCoin(coin string) bool {
+	switch strings.ToLower(strings.TrimSpace(coin)) {
+	case "usdt", "usdc", "usdc.e":
+		return true
+	default:
+		return false
+	}
 }
 
 func getRateForCoinFromAPI(coin string, base string) float64 {

@@ -6,14 +6,8 @@ import (
 	"github.com/GMWalletApp/epusdt/model/data"
 )
 
-const SupportedPaymentToken = "USDT"
-
-func IsSupportedPaymentToken(token string) bool {
-	return strings.EqualFold(strings.TrimSpace(token), SupportedPaymentToken)
-}
-
 func IsSupportedPaymentAsset(network, token string) bool {
-	if !IsSupportedPaymentToken(token) {
+	if strings.TrimSpace(network) == "" || strings.TrimSpace(token) == "" {
 		return false
 	}
 	row, err := data.GetEnabledChainTokenBySymbol(network, token)

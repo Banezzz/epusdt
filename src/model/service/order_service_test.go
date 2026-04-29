@@ -139,7 +139,7 @@ func TestCreateTransactionLeavesCheckoutOrderAwaitingSelection(t *testing.T) {
 	}
 }
 
-func TestPaymentFlowRejectsNonUSDTToken(t *testing.T) {
+func TestPaymentFlowAcceptsConfiguredNonUSDTToken(t *testing.T) {
 	cleanup := testutil.SetupTestDatabases(t)
 	defer cleanup()
 
@@ -157,20 +157,36 @@ func TestPaymentFlowRejectsNonUSDTToken(t *testing.T) {
 
 	req := newCreateTransactionRequest("order_usdc_1", 1)
 	req.Token = "USDC"
-	if _, err := CreateTransaction(req, nil); err != constant.SupportedAssetNotFound {
-		t.Fatalf("CreateTransaction error = %v, want %v", err, constant.SupportedAssetNotFound)
+	usdcResp, err := CreateTransaction(req, nil)
+	if err != nil {
+		t.Fatalf("create USDC transaction: %v", err)
+	}
+	if usdcResp.Token != "USDC" {
+		t.Fatalf("USDC response token = %q, want USDC", usdcResp.Token)
 	}
 
 	parent, err := CreateTransaction(newCreateTransactionRequest("order_usdt_parent", 1), nil)
 	if err != nil {
 		t.Fatalf("create parent: %v", err)
 	}
-	if _, err := SwitchNetwork(&request.SwitchNetworkRequest{
+	switchResp, err := SwitchNetwork(&request.SwitchNetworkRequest{
 		TradeId: parent.TradeId,
 		Token:   "USDC",
 		Network: mdb.NetworkTron,
+	})
+	if err != nil {
+		t.Fatalf("switch to USDC: %v", err)
+	}
+	if switchResp.Token != "USDC" {
+		t.Fatalf("switch response token = %q, want USDC", switchResp.Token)
+	}
+
+	if _, err := SwitchNetwork(&request.SwitchNetworkRequest{
+		TradeId: parent.TradeId,
+		Token:   "DOGE",
+		Network: mdb.NetworkTron,
 	}); err != constant.SupportedAssetNotFound {
-		t.Fatalf("SwitchNetwork error = %v, want %v", err, constant.SupportedAssetNotFound)
+		t.Fatalf("unconfigured SwitchNetwork error = %v, want %v", err, constant.SupportedAssetNotFound)
 	}
 }
 
