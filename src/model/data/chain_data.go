@@ -3,8 +3,8 @@ package data
 import (
 	"strings"
 
-	"github.com/GMWalletApp/ezpay/model/dao"
-	"github.com/GMWalletApp/ezpay/model/mdb"
+	"github.com/Banezzz/ezpay/model/dao"
+	"github.com/Banezzz/ezpay/model/mdb"
 )
 
 // ListChains returns all chain rows ordered by id.

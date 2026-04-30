@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GMWalletApp/ezpay/model/data"
-	"github.com/GMWalletApp/ezpay/model/mdb"
-	"github.com/GMWalletApp/ezpay/model/request"
-	"github.com/GMWalletApp/ezpay/model/service"
+	"github.com/Banezzz/ezpay/model/data"
+	"github.com/Banezzz/ezpay/model/mdb"
+	"github.com/Banezzz/ezpay/model/request"
+	"github.com/Banezzz/ezpay/model/service"
 	"github.com/labstack/echo/v4"
 )
 

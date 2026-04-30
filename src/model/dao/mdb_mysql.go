@@ -3,8 +3,8 @@ package dao
 import (
 	"time"
 
-	"github.com/GMWalletApp/ezpay/config"
-	"github.com/GMWalletApp/ezpay/util/log"
+	"github.com/Banezzz/ezpay/config"
+	"github.com/Banezzz/ezpay/util/log"
 	"github.com/gookit/color"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"

@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/GMWalletApp/ezpay/model/data"
-	"github.com/GMWalletApp/ezpay/model/mdb"
-	"github.com/GMWalletApp/ezpay/task"
+	"github.com/Banezzz/ezpay/model/data"
+	"github.com/Banezzz/ezpay/model/mdb"
+	"github.com/Banezzz/ezpay/task"
 	"github.com/labstack/echo/v4"
 )
 

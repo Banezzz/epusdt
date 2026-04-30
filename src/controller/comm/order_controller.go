@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/GMWalletApp/ezpay/middleware"
-	"github.com/GMWalletApp/ezpay/model/mdb"
-	"github.com/GMWalletApp/ezpay/model/request"
-	"github.com/GMWalletApp/ezpay/model/service"
-	"github.com/GMWalletApp/ezpay/util/constant"
-	"github.com/GMWalletApp/ezpay/util/log"
+	"github.com/Banezzz/ezpay/middleware"
+	"github.com/Banezzz/ezpay/model/mdb"
+	"github.com/Banezzz/ezpay/model/request"
+	"github.com/Banezzz/ezpay/model/service"
+	"github.com/Banezzz/ezpay/util/constant"
+	"github.com/Banezzz/ezpay/util/log"
 	"github.com/labstack/echo/v4"
 )
 

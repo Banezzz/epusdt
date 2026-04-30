@@ -6,8 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/GMWalletApp/ezpay/model/data"
-	"github.com/GMWalletApp/ezpay/model/mdb"
+	"github.com/Banezzz/ezpay/model/data"
+	"github.com/Banezzz/ezpay/model/mdb"
 	"github.com/golang-jwt/jwt/v4"
 )
 

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GMWalletApp/ezpay/model/data"
+	"github.com/Banezzz/ezpay/model/data"
 	"github.com/labstack/echo/v4"
 )
 

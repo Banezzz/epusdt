@@ -1,4 +1,4 @@
-module github.com/GMWalletApp/epusdt
+module github.com/Banezzz/ezpay
 
 go 1.25.0
 

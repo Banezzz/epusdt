@@ -13,9 +13,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/GMWalletApp/ezpay/model/data"
-	"github.com/GMWalletApp/ezpay/model/mdb"
-	"github.com/GMWalletApp/ezpay/util/log"
+	"github.com/Banezzz/ezpay/model/data"
+	"github.com/Banezzz/ezpay/model/mdb"
+	"github.com/Banezzz/ezpay/util/log"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 )

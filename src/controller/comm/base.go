@@ -1,6 +1,6 @@
 package comm
 
-import "github.com/GMWalletApp/ezpay/controller"
+import "github.com/Banezzz/ezpay/controller"
 
 var Ctrl = &BaseCommController{}
 

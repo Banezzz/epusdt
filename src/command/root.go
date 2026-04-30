@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/GMWalletApp/ezpay/config"
+	"github.com/Banezzz/ezpay/config"
 	"github.com/spf13/cobra"
 )
 

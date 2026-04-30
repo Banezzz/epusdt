@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/GMWalletApp/ezpay/model/mdb"
+	"github.com/Banezzz/ezpay/model/mdb"
 	"github.com/gookit/color"
 	"gorm.io/gorm/clause"
 )

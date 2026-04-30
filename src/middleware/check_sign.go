@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/GMWalletApp/ezpay/model/data"
-	"github.com/GMWalletApp/ezpay/util/constant"
-	"github.com/GMWalletApp/ezpay/util/json"
-	"github.com/GMWalletApp/ezpay/util/sign"
+	"github.com/Banezzz/ezpay/model/data"
+	"github.com/Banezzz/ezpay/util/constant"
+	"github.com/Banezzz/ezpay/util/json"
+	"github.com/Banezzz/ezpay/util/sign"
 	"github.com/labstack/echo/v4"
 )
 

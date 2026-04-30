@@ -3,8 +3,8 @@ package comm
 import (
 	"net/http"
 
-	"github.com/GMWalletApp/ezpay/model/response"
-	"github.com/GMWalletApp/ezpay/model/service"
+	"github.com/Banezzz/ezpay/model/response"
+	"github.com/Banezzz/ezpay/model/service"
 	"github.com/labstack/echo/v4"
 )
 

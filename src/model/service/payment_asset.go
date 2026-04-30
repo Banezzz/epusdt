@@ -3,7 +3,7 @@ package service
 import (
 	"strings"
 
-	"github.com/GMWalletApp/ezpay/model/data"
+	"github.com/Banezzz/ezpay/model/data"
 )
 
 func IsSupportedPaymentAsset(network, token string) bool {

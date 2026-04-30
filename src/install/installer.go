@@ -28,8 +28,8 @@ import (
 	"text/template"
 	"time"
 
-	appMiddleware "github.com/GMWalletApp/ezpay/middleware"
-	luluHttp "github.com/GMWalletApp/ezpay/util/http"
+	appMiddleware "github.com/Banezzz/ezpay/middleware"
+	luluHttp "github.com/Banezzz/ezpay/util/http"
 	"github.com/gookit/color"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"

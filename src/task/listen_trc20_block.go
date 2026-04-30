@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	tron "github.com/GMWalletApp/ezpay/crypto"
-	"github.com/GMWalletApp/ezpay/model/service"
-	"github.com/GMWalletApp/ezpay/util/log"
+	tron "github.com/Banezzz/ezpay/crypto"
+	"github.com/Banezzz/ezpay/model/service"
+	"github.com/Banezzz/ezpay/util/log"
 )
 
 const (

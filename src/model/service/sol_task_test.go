@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/GMWalletApp/ezpay/internal/testutil"
-	"github.com/GMWalletApp/ezpay/model/dao"
-	"github.com/GMWalletApp/ezpay/model/mdb"
+	"github.com/Banezzz/ezpay/internal/testutil"
+	"github.com/Banezzz/ezpay/model/dao"
+	"github.com/Banezzz/ezpay/model/mdb"
 	"github.com/tidwall/gjson"
 )
 

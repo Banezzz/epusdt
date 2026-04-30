@@ -9,13 +9,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GMWalletApp/ezpay/internal/testutil"
-	"github.com/GMWalletApp/ezpay/model/dao"
-	"github.com/GMWalletApp/ezpay/model/data"
-	"github.com/GMWalletApp/ezpay/model/mdb"
-	"github.com/GMWalletApp/ezpay/model/request"
-	"github.com/GMWalletApp/ezpay/util/constant"
-	"github.com/GMWalletApp/ezpay/util/http_client"
+	"github.com/Banezzz/ezpay/internal/testutil"
+	"github.com/Banezzz/ezpay/model/dao"
+	"github.com/Banezzz/ezpay/model/data"
+	"github.com/Banezzz/ezpay/model/mdb"
+	"github.com/Banezzz/ezpay/model/request"
+	"github.com/Banezzz/ezpay/util/constant"
+	"github.com/Banezzz/ezpay/util/http_client"
 	"github.com/go-resty/resty/v2"
 )
 

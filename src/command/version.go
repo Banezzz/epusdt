@@ -3,7 +3,7 @@ package command
 import (
 	"fmt"
 
-	"github.com/GMWalletApp/ezpay/config"
+	"github.com/Banezzz/ezpay/config"
 	"github.com/spf13/cobra"
 )
 

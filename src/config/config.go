@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GMWalletApp/ezpay/util/http_client"
+	"github.com/Banezzz/ezpay/util/http_client"
 	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
 )

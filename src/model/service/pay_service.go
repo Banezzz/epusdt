@@ -3,10 +3,10 @@ package service
 import (
 	"errors"
 
-	"github.com/GMWalletApp/ezpay/config"
-	"github.com/GMWalletApp/ezpay/model/data"
-	"github.com/GMWalletApp/ezpay/model/mdb"
-	"github.com/GMWalletApp/ezpay/model/response"
+	"github.com/Banezzz/ezpay/config"
+	"github.com/Banezzz/ezpay/model/data"
+	"github.com/Banezzz/ezpay/model/mdb"
+	"github.com/Banezzz/ezpay/model/response"
 )
 
 var ErrOrder = errors.New("不存在待支付订单或已过期")

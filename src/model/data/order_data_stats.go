@@ -3,8 +3,8 @@ package data
 import (
 	"time"
 
-	"github.com/GMWalletApp/ezpay/model/dao"
-	"github.com/GMWalletApp/ezpay/model/mdb"
+	"github.com/Banezzz/ezpay/model/dao"
+	"github.com/Banezzz/ezpay/model/mdb"
 )
 
 // DailyStat is one bucket of day-level aggregation used by the

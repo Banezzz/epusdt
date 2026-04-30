@@ -2,7 +2,7 @@ package controller
 
 import (
 	"errors"
-	"github.com/GMWalletApp/ezpay/util/http"
+	"github.com/Banezzz/ezpay/util/http"
 	"github.com/gookit/validate"
 	"github.com/gookit/validate/locales/zhcn"
 	"github.com/gookit/validate/locales/zhtw"

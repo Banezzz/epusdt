@@ -2,7 +2,7 @@ package log
 
 import (
 	"fmt"
-	"github.com/GMWalletApp/ezpay/config"
+	"github.com/Banezzz/ezpay/config"
 	"github.com/natefinch/lumberjack"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"

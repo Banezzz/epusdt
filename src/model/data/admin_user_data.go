@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/GMWalletApp/ezpay/model/dao"
-	"github.com/GMWalletApp/ezpay/model/mdb"
+	"github.com/Banezzz/ezpay/model/dao"
+	"github.com/Banezzz/ezpay/model/mdb"
 	"github.com/dromara/carbon/v2"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"

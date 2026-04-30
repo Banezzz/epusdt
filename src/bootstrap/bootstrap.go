@@ -3,14 +3,14 @@ package bootstrap
 import (
 	"sync"
 
-	"github.com/GMWalletApp/ezpay/config"
-	"github.com/GMWalletApp/ezpay/model/dao"
-	"github.com/GMWalletApp/ezpay/model/data"
-	"github.com/GMWalletApp/ezpay/mq"
-	"github.com/GMWalletApp/ezpay/task"
-	"github.com/GMWalletApp/ezpay/telegram"
-	appjwt "github.com/GMWalletApp/ezpay/util/jwt"
-	"github.com/GMWalletApp/ezpay/util/log"
+	"github.com/Banezzz/ezpay/config"
+	"github.com/Banezzz/ezpay/model/dao"
+	"github.com/Banezzz/ezpay/model/data"
+	"github.com/Banezzz/ezpay/mq"
+	"github.com/Banezzz/ezpay/task"
+	"github.com/Banezzz/ezpay/telegram"
+	appjwt "github.com/Banezzz/ezpay/util/jwt"
+	"github.com/Banezzz/ezpay/util/log"
 	"github.com/gookit/color"
 )
 

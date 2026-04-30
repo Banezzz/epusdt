@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/GMWalletApp/ezpay/command"
+	"github.com/Banezzz/ezpay/command"
 	"github.com/gookit/color"
 )
 

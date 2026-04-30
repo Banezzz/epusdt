@@ -1,8 +1,8 @@
 package admin
 
 import (
-	"github.com/GMWalletApp/ezpay/controller"
-	"github.com/GMWalletApp/ezpay/middleware"
+	"github.com/Banezzz/ezpay/controller"
+	"github.com/Banezzz/ezpay/middleware"
 	"github.com/labstack/echo/v4"
 )
 

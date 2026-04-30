@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	appjwt "github.com/GMWalletApp/ezpay/util/jwt"
+	appjwt "github.com/Banezzz/ezpay/util/jwt"
 	"github.com/labstack/echo/v4"
 )
 

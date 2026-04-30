@@ -5,8 +5,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/GMWalletApp/ezpay/model/dao"
-	"github.com/GMWalletApp/ezpay/model/mdb"
+	"github.com/Banezzz/ezpay/model/dao"
+	"github.com/Banezzz/ezpay/model/mdb"
 	"gorm.io/gorm/clause"
 )
 

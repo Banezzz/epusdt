@@ -1,8 +1,8 @@
 package http
 
 import (
-	"github.com/GMWalletApp/ezpay/util/constant"
-	"github.com/GMWalletApp/ezpay/util/page"
+	"github.com/Banezzz/ezpay/util/constant"
+	"github.com/Banezzz/ezpay/util/page"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )

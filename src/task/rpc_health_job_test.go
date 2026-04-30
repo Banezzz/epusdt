@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GMWalletApp/ezpay/model/mdb"
+	"github.com/Banezzz/ezpay/model/mdb"
 )
 
 // --------------- ParseAddress ---------------

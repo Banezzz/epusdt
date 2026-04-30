@@ -3,7 +3,7 @@ package mq
 import (
 	"sync"
 
-	"github.com/GMWalletApp/ezpay/config"
+	"github.com/Banezzz/ezpay/config"
 )
 
 var (

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GMWalletApp/ezpay/util/http_client"
+	"github.com/Banezzz/ezpay/util/http_client"
 	"github.com/go-resty/resty/v2"
 	"github.com/spf13/viper"
 )

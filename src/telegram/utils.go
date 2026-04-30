@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"strings"
 
-	"github.com/GMWalletApp/ezpay/model/mdb"
+	"github.com/Banezzz/ezpay/model/mdb"
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/gagliardetto/solana-go"
 )

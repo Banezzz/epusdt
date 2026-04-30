@@ -8,14 +8,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GMWalletApp/ezpay/config"
-	"github.com/GMWalletApp/ezpay/model/dao"
-	"github.com/GMWalletApp/ezpay/model/data"
-	"github.com/GMWalletApp/ezpay/model/mdb"
-	"github.com/GMWalletApp/ezpay/model/response"
-	"github.com/GMWalletApp/ezpay/util/http_client"
-	"github.com/GMWalletApp/ezpay/util/log"
-	"github.com/GMWalletApp/ezpay/util/sign"
+	"github.com/Banezzz/ezpay/config"
+	"github.com/Banezzz/ezpay/model/dao"
+	"github.com/Banezzz/ezpay/model/data"
+	"github.com/Banezzz/ezpay/model/mdb"
+	"github.com/Banezzz/ezpay/model/response"
+	"github.com/Banezzz/ezpay/util/http_client"
+	"github.com/Banezzz/ezpay/util/log"
+	"github.com/Banezzz/ezpay/util/sign"
 )
 
 // resolveOrderApiKey returns the api_keys row that signed the order.
