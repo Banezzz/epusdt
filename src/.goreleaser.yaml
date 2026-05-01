@@ -15,7 +15,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -s -w -X github.com/assimon/luuu/config.BuildVersion={{ .Version }} -X github.com/assimon/luuu/config.BuildCommit={{ .Commit }} -X github.com/assimon/luuu/config.BuildDate={{ .Date }}
+      - -s -w -X github.com/Banezzz/ezpay/config.BuildVersion={{ .Version }} -X github.com/Banezzz/ezpay/config.BuildCommit={{ .Commit }} -X github.com/Banezzz/ezpay/config.BuildDate={{ .Date }}
     goos:
       - linux
       - darwin
@@ -27,7 +27,7 @@ builds:
 archives:
   - id: ezpay
     ids:
-      - epusdt
+      - ezpay
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     files:
       - .env.example

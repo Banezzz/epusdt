@@ -1,10 +1,10 @@
 <?php
 /**
- * The file was created by Assimon.
+ * EZPay Payment Gateway Plugin for Dujiaoka
  *
- * @author    GMWalletApp<ashang@utf8.hk>
- * @copyright GMWalletApp<ashang@utf8.hk>
- * @link      http://utf8.hk/
+ * @author    Banezzz
+ * @copyright Banezzz
+ * @link      https://github.com/Banezzz/ezpay
  */
 
 namespace App\Http\Controllers\Pay;
