@@ -1,15 +1,15 @@
 version: 2
 
-project_name: epusdt
+project_name: ezpay
 
 before:
   hooks:
     - go test ./...
 
 builds:
-  - id: epusdt
+  - id: ezpay
     main: .
-    binary: epusdt
+    binary: ezpay
     env:
       - CGO_ENABLED=0
     flags:
@@ -25,10 +25,10 @@ builds:
       - arm64
 
 archives:
-  - id: epusdt
+  - id: ezpay
     ids:
       - epusdt
-    name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     files:
       - .env.example
       - static/**
@@ -45,8 +45,8 @@ snapshot:
 
 release:
   github:
-    owner: GMwalletApp
-    name: epusdt
+    owner: Banezzz
+    name: ezpay
   prerelease: auto
 
 changelog:

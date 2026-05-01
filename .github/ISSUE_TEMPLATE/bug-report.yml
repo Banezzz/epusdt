@@ -10,10 +10,10 @@ body:
         # 提 ISSUE 须知
 
         请先阅读文档：
-        - [epusdt 文档](https://epusdt.com/)
+        - [EZPay 文档](https://ezpay.infrix.org/)
 
         如果仍有问题，请先在 issue 列表中搜索是否已有相同问题：
-        - [Issue 列表](https://github.com/GMWalletApp/epusdt/issues)
+        - [Issue 列表](https://github.com/Banezzz/ezpay/issues)
 
         如果没有找到相关问题，请按下面格式尽量完整填写，便于我们快速排查。
 
@@ -30,9 +30,9 @@ body:
           required: true
 
   - type: textarea
-    id: epusdt_version
+    id: ezpay_version
     attributes:
-      label: 1. epusdt 版本
+      label: 1. EZPay 版本
       description: 请提供版本号或 commit hash，避免只写“最新版”
       placeholder: |
         例如：

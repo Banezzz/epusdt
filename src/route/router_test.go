@@ -177,7 +177,7 @@ func TestRootPostRoute(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", rec.Code)
 	}
-	if body := rec.Body.String(); body != "hello ezpay, https://github.com/GMwalletApp/ezpay" {
+	if body := rec.Body.String(); body != "hello ezpay, https://github.com/Banezzz/ezpay" {
 		t.Fatalf("unexpected body: %q", body)
 	}
 }

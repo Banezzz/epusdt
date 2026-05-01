@@ -205,7 +205,7 @@ supervisorctl tail ezpay
  | |___| |_) | |_| \__ \ (_| | |_ 
  |_____| .__/ \__,_|___/\__,_|\__|
        |_|                        
-EZPay version(0.0.2) Powered by GMWalletApp https://github.com/Banezzz/ezpay
+EZPay version(0.0.2) Powered by EZPay https://github.com/Banezzz/ezpay
 ⇨ http server started on [::]:8000
 ```
 ## 其他注意事项

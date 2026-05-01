@@ -82,7 +82,7 @@ EOF
 cat <<EOF > docker-compose.yaml
 services:
   ezpay:
-    image: gmwallet/ezpay:latest
+    image: banezzz/ezpay:latest
     restart: always
     build:
       context: .

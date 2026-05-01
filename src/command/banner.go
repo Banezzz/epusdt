@@ -12,7 +12,7 @@ func printBanner() {
 		config.GetAppVersion(),
 		config.GetBuildCommit(),
 		config.GetBuildDate(),
-		"GMwalletApp",
-		"https://github.com/GMwalletApp/ezpay",
+		"EZPay",
+		"https://github.com/Banezzz/ezpay",
 	)
 }

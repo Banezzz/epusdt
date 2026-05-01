@@ -32,7 +32,7 @@ func RegisterRoute(e *echo.Echo) {
 // RegisterPublicRoutes registers only the user-facing checkout surface.
 func RegisterPublicRoutes(e *echo.Echo) {
 	e.POST("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "hello ezpay, https://github.com/GMwalletApp/ezpay")
+		return c.String(http.StatusOK, "hello ezpay, https://github.com/Banezzz/ezpay")
 	})
 
 	payRoute := e.Group("/pay")

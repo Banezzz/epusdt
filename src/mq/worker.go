@@ -265,7 +265,7 @@ func sendOrderCallback(order *mdb.Orders) error {
 		orderResp.Signature = signature
 
 		resp, err := client.R().
-			SetHeader("powered-by", "EZPay(https://github.com/GMwalletApp/ezpay)").
+			SetHeader("powered-by", "EZPay(https://github.com/Banezzz/ezpay)").
 			SetBody(orderResp).
 			Post(order.NotifyUrl)
 		if err != nil {
