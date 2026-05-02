@@ -22,6 +22,7 @@ import (
 // @Produce      json
 // @Success      200 {object} response.ApiResponse{data=response.SupportedAssetsResponse}
 // @Failure      400 {object} response.ApiResponse
+// @Router       /payments/ezpay/v1/supported-assets [get]
 // @Router       /payments/gmpay/v1/supported-assets [get]
 // @Router       /admin/api/v1/supported-assets [get]
 func (c *BaseCommController) GetSupportedAssets(ctx echo.Context) error {
@@ -94,6 +95,7 @@ func (c *BaseCommController) getSupportedAssets(ctx echo.Context) error {
 // @Param        network query string false "Network filter (e.g. tron, ethereum)"
 // @Success      200 {object} response.ApiResponse{data=[]mdb.ChainToken}
 // @Failure      400 {object} response.ApiResponse
+// @Router       /payments/ezpay/v1/supported-assets/records [get]
 // @Router       /payments/gmpay/v1/supported-assets/records [get]
 func (c *BaseCommController) ListSupportedAssetRecords(ctx echo.Context) error {
 	network := ctx.QueryParam("network")
@@ -112,6 +114,7 @@ func (c *BaseCommController) ListSupportedAssetRecords(ctx echo.Context) error {
 // @Param        id path int true "ChainToken ID"
 // @Success      200 {object} response.ApiResponse{data=mdb.ChainToken}
 // @Failure      400 {object} response.ApiResponse
+// @Router       /payments/ezpay/v1/supported-assets/{id} [get]
 // @Router       /payments/gmpay/v1/supported-assets/{id} [get]
 func (c *BaseCommController) GetSupportedAsset(ctx echo.Context) error {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 64)

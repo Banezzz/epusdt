@@ -49,6 +49,12 @@ func RegisterPublicRoutes(e *echo.Echo) {
 	payRoute.POST("/switch-network", comm.Ctrl.SwitchNetwork)
 
 	paymentRoute := e.Group("/payments")
+
+	// EZPay v1 routes (primary)
+	ezpayV1 := paymentRoute.Group("/ezpay/v1")
+	ezpayV1.GET("/supported-assets", comm.Ctrl.GetCheckoutSupportedAssets)
+
+	// GMPay v1 routes (deprecated, kept for backward compatibility)
 	gmpayV1 := paymentRoute.Group("/gmpay/v1")
 	gmpayV1.GET("/supported-assets", comm.Ctrl.GetCheckoutSupportedAssets)
 }
@@ -59,13 +65,17 @@ func RegisterPublicRoutes(e *echo.Echo) {
 func RegisterInternalRoutes(e *echo.Echo) {
 	paymentRoute := e.Group("/payments")
 
-	// gmpay v1 routes
+	// EZPay v1 routes (primary)
+	ezpayV1 := paymentRoute.Group("/ezpay/v1")
+	ezpayV1.POST("/order/create-transaction", comm.Ctrl.CreateTransaction, middleware.CheckApiSign())
+
+	// GMPay v1 routes (deprecated, kept for backward compatibility)
 	gmpayV1 := paymentRoute.Group("/gmpay/v1")
 	gmpayV1.POST("/order/create-transaction", comm.Ctrl.CreateTransaction, middleware.CheckApiSign())
 	// gmpayV1.GET("/supported-assets/records", comm.Ctrl.ListSupportedAssetRecords)
 	// gmpayV1.GET("/supported-assets/:id", comm.Ctrl.GetSupportedAsset)
 
-	// epay v1 routes
+	// EPay v1 routes (易支付 compatible protocol, kept for protocol compatibility)
 	//
 	// Signature uses the pid from the request as the api_keys lookup
 	// key; the matching row's secret_key plays the role of the legacy

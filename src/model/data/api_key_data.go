@@ -13,7 +13,7 @@ import (
 )
 
 // GetEnabledApiKey looks up an enabled merchant credential row by PID.
-// A single row is valid for both EPAY and GMPAY flows; the route
+// A single row is valid for both EPAY and EZPAY flows; the route
 // determines the flow. Returns (row, nil) on success; (zero row, nil)
 // when no match; error only on true DB failure.
 func GetEnabledApiKey(pid string) (*mdb.ApiKey, error) {

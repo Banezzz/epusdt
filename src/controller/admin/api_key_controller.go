@@ -13,7 +13,7 @@ import (
 )
 
 // CreateApiKeyRequest is the payload for creating an API key.
-// A single key is valid for both gateway flows (epay/gmpay); there is
+// A single key is valid for both gateway flows (epay/ezpay); there is
 // no gateway_type. PID is auto-generated (incrementing from 1000);
 // no manual override.
 type CreateApiKeyRequest struct {
@@ -67,7 +67,7 @@ func (c *BaseAdminController) ListApiKeys(ctx echo.Context) error {
 // the highest existing numeric PID (starting at 1000). Secret is
 // randomly generated and returned once.
 // @Summary      Create API key
-// @Description  Create a new universal API key. Usable for both gateway flows (epay/gmpay). PID auto-incremented; secret returned once.
+// @Description  Create a new universal API key. Usable for both gateway flows (epay/ezpay). PID auto-incremented; secret returned once.
 // @Tags         Admin API Keys
 // @Security     AdminJWT
 // @Accept       json

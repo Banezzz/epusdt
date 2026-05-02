@@ -42,6 +42,7 @@ func apiKeyFromContext(ctx echo.Context) *mdb.ApiKey {
 // @Param        payment_type formData string false "Payment type"
 // @Success      200 {object} response.ApiResponse{data=response.CreateTransactionResponse}
 // @Failure      400 {object} response.ApiResponse
+// @Router       /payments/ezpay/v1/order/create-transaction [post]
 // @Router       /payments/gmpay/v1/order/create-transaction [post]
 func (c *BaseCommController) CreateTransaction(ctx echo.Context) (err error) {
 	req := new(request.CreateTransactionRequest)
