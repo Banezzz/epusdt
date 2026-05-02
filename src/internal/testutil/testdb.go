@@ -71,7 +71,7 @@ func SetupTestDatabases(t testing.TB) func() {
 		mainDB.Create(&mdb.ChainToken{Network: network, Symbol: "USDT", Enabled: true, Decimals: 6})
 	}
 
-	// Seed two universal api_keys rows. Both usable for EPAY/GMPAY
+	// Seed two universal api_keys rows. Both usable for EPAY/EZPAY
 	// flows; the numeric PID 1001 row lets legacy tests that submit
 	// `pid=1001` still match.
 	mainDB.Create(&mdb.ApiKey{

@@ -8,7 +8,7 @@ const (
 )
 
 // ApiKey stores a universal merchant credential (PID + secret) that is
-// valid for both EPAY and GMPAY payment flows. Identification at
+// valid for both EPAY and EZPAY payment flows. Identification at
 // request time is always by PID; the gateway flow is chosen by the
 // route (not by any property of the row).
 type ApiKey struct {
