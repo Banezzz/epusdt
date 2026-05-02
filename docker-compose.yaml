@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./docker/ezpay.env:/app/.env:ro
-      - epusdt-data:/app/data
+      - ezpay-data:/app/data
     environment:
       - EZPAY_ALLOW_PRIVATE_CALLBACKS=true
     ports:
@@ -18,9 +18,9 @@ services:
       - new-api-network
 
 volumes:
-  epusdt-data:
+  ezpay-data:
     external: true
-    name: epusdt_epusdt-data
+    name: ezpay_ezpay-data
 
 networks:
   new-api-network:
